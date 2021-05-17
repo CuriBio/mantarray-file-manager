@@ -62,6 +62,7 @@ BOOTUP_COUNTER_UUID = uuid.UUID("b9ccc724-a39d-429a-be6d-3fd29be5037d")
 TOTAL_WORKING_HOURS_UUID = uuid.UUID("f8108718-2fa0-40ce-a51a-8478e5edd4b8")
 TAMPER_FLAG_UUID = uuid.UUID("68d0147f-9a84-4423-9c50-228da16ba895")
 PCB_SERIAL_NUMBER_UUID = uuid.UUID("5103f995-19d2-4880-8a2e-2ce9080cd2f5")
+MAGNETOMETER_CONFIGURATION_UUID = uuid.UUID("921121e9-4191-4536-bedd-03186fa1e117")
 METADATA_UUID_DESCRIPTIONS = immutabledict(
     {
         # General values
@@ -107,6 +108,7 @@ METADATA_UUID_DESCRIPTIONS = immutabledict(
         TOTAL_WORKING_HOURS_UUID: "The total number of hours this Mantarray Instrument has been powered on and running",
         TAMPER_FLAG_UUID: "Is it suspected the internals of the Mantarray enclosure have been tampered with",
         PCB_SERIAL_NUMBER_UUID: "The serial number of the Mantarray PCB",
+        MAGNETOMETER_CONFIGURATION_UUID: "The state (on/off) of the board's magnetometers",
     }
 )
 

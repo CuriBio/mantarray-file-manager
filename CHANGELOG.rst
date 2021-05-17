@@ -2,6 +2,12 @@ Changelog for Mantarray File Manager
 ====================================
 
 
+0.5.1 (2021-05-17)
+------------------
+
+- Added UUID for magnetometer configuration.
+
+
 0.5.0 (2021-05-07)
 ------------------
 
