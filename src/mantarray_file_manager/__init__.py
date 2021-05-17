@@ -23,6 +23,7 @@ from .constants import FILE_MIGRATION_PATHS
 from .constants import FILE_VERSION_PRIOR_TO_MIGRATION_UUID
 from .constants import HARDWARE_TEST_RECORDING_UUID
 from .constants import IS_FILE_ORIGINAL_UNTRIMMED_UUID
+from .constants import MAGNETOMETER_CONFIGURATION_UUID
 from .constants import MAIN_FIRMWARE_VERSION_UUID
 from .constants import MANTARRAY_NICKNAME_UUID
 from .constants import MANTARRAY_SERIAL_NUMBER_UUID
@@ -146,4 +147,5 @@ __all__ = [
     "TAMPER_FLAG_UUID",
     "PCB_SERIAL_NUMBER_UUID",
     "CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION",
+    "MAGNETOMETER_CONFIGURATION_UUID",
 ]
