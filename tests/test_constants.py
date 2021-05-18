@@ -6,6 +6,7 @@ from mantarray_file_manager import ADC_REF_OFFSET_UUID
 from mantarray_file_manager import ADC_TISSUE_OFFSET_UUID
 from mantarray_file_manager import BACKEND_LOG_UUID
 from mantarray_file_manager import BARCODE_IS_FROM_SCANNER_UUID
+from mantarray_file_manager import BOOTUP_COUNTER_UUID
 from mantarray_file_manager import CENTIMILLISECONDS_PER_SECOND
 from mantarray_file_manager import COMPUTER_NAME_HASH_UUID
 from mantarray_file_manager import CURI_BIO_ACCOUNT_UUID
@@ -19,6 +20,7 @@ from mantarray_file_manager import FILE_MIGRATION_PATHS
 from mantarray_file_manager import FILE_VERSION_PRIOR_TO_MIGRATION_UUID
 from mantarray_file_manager import HARDWARE_TEST_RECORDING_UUID
 from mantarray_file_manager import IS_FILE_ORIGINAL_UNTRIMMED_UUID
+from mantarray_file_manager import MAGNETOMETER_CONFIGURATION_UUID
 from mantarray_file_manager import MAIN_FIRMWARE_VERSION_UUID
 from mantarray_file_manager import MANTARRAY_NICKNAME_UUID
 from mantarray_file_manager import MANTARRAY_SERIAL_NUMBER_UUID
@@ -27,6 +29,7 @@ from mantarray_file_manager import MICROSECONDS_PER_CENTIMILLISECOND
 from mantarray_file_manager import MIN_SUPPORTED_FILE_VERSION
 from mantarray_file_manager import NOT_APPLICABLE_H5_METADATA
 from mantarray_file_manager import ORIGINAL_FILE_VERSION_UUID
+from mantarray_file_manager import PCB_SERIAL_NUMBER_UUID
 from mantarray_file_manager import PLATE_BARCODE_UUID
 from mantarray_file_manager import REF_SAMPLING_PERIOD_UUID
 from mantarray_file_manager import REFERENCE_SENSOR_READINGS
@@ -35,9 +38,11 @@ from mantarray_file_manager import SLEEP_FIRMWARE_VERSION_UUID
 from mantarray_file_manager import SOFTWARE_BUILD_NUMBER_UUID
 from mantarray_file_manager import SOFTWARE_RELEASE_VERSION_UUID
 from mantarray_file_manager import START_RECORDING_TIME_INDEX_UUID
+from mantarray_file_manager import TAMPER_FLAG_UUID
 from mantarray_file_manager import TISSUE_SAMPLING_PERIOD_UUID
 from mantarray_file_manager import TISSUE_SENSOR_READINGS
 from mantarray_file_manager import TOTAL_WELL_COUNT_UUID
+from mantarray_file_manager import TOTAL_WORKING_HOURS_UUID
 from mantarray_file_manager import TRIMMED_TIME_FROM_ORIGINAL_END_UUID
 from mantarray_file_manager import TRIMMED_TIME_FROM_ORIGINAL_START_UUID
 from mantarray_file_manager import USER_ACCOUNT_ID_UUID
@@ -114,10 +119,11 @@ def test_metadata_UUIDs():
         "399b2148-09d4-418b-a132-e37df2721938"
     )
     assert FILE_VERSION_PRIOR_TO_MIGRATION_UUID == uuid.UUID("11b4945b-3cf3-4f67-8bee-7abc3c449756")
-    BOOTUP_COUNTER_UUID = uuid.UUID("b9ccc724-a39d-429a-be6d-3fd29be5037d")
-    TOTAL_WORKING_HOURS_UUID = uuid.UUID("f8108718-2fa0-40ce-a51a-8478e5edd4b8")
-    TAMPER_FLAG_UUID = uuid.UUID("68d0147f-9a84-4423-9c50-228da16ba895")
-    PCB_SERIAL_NUMBER_UUID = uuid.UUID("5103f995-19d2-4880-8a2e-2ce9080cd2f5")
+    assert BOOTUP_COUNTER_UUID == uuid.UUID("b9ccc724-a39d-429a-be6d-3fd29be5037d")
+    assert TOTAL_WORKING_HOURS_UUID == uuid.UUID("f8108718-2fa0-40ce-a51a-8478e5edd4b8")
+    assert TAMPER_FLAG_UUID == uuid.UUID("68d0147f-9a84-4423-9c50-228da16ba895")
+    assert PCB_SERIAL_NUMBER_UUID == uuid.UUID("5103f995-19d2-4880-8a2e-2ce9080cd2f5")
+    assert MAGNETOMETER_CONFIGURATION_UUID == uuid.UUID("921121e9-4191-4536-bedd-03186fa1e117")
 
     assert METADATA_UUID_DESCRIPTIONS == {
         HARDWARE_TEST_RECORDING_UUID: "Is Hardware Test Recording",
@@ -160,6 +166,7 @@ def test_metadata_UUIDs():
         TOTAL_WORKING_HOURS_UUID: "The total number of hours this Mantarray Instrument has been powered on and running",
         TAMPER_FLAG_UUID: "Is it suspected the internals of the Mantarray enclosure have been tampered with",
         PCB_SERIAL_NUMBER_UUID: "The serial number of the Mantarray PCB",
+        MAGNETOMETER_CONFIGURATION_UUID: "The state (on/off) of the board's magnetometers",
     }
 
 
