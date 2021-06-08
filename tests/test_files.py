@@ -7,6 +7,7 @@ from uuid import UUID
 
 import h5py
 from mantarray_file_manager import AxisDataForSensorNotInFileError
+from mantarray_file_manager import BaseWellFile
 from mantarray_file_manager import Beta1WellFile
 from mantarray_file_manager import FILE_FORMAT_VERSION_METADATA_KEY
 from mantarray_file_manager import FileAttributeNotFoundError
@@ -39,7 +40,7 @@ __fixtures__ = (
 PATH_OF_CURRENT_FILE = get_current_file_abs_directory()
 
 
-# TODO rename Beta1WellFile in test names of tests that actually apply to H5Wrapper or BaseWellFile
+# TODO make a fixture for a generic H5Wrapper and BaseWellFile class and switch out the Beta1WellFiles used in those tests
 
 
 def test_H5Wrapper__opens_file_and_gets_file_version():
@@ -54,7 +55,7 @@ def test_H5Wrapper__opens_file_and_gets_file_version():
     assert wrapper.get_file_name() == expected_path
 
 
-def test_H5Wrapper__When_deleted__Then_it_closes_the_h5_file(mocker):
+def test_H5Wrapper__closes_its_h5_file_when_deleted(mocker):
     wrapper = H5Wrapper(
         os.path.join(
             PATH_OF_CURRENT_FILE,
@@ -67,8 +68,8 @@ def test_H5Wrapper__When_deleted__Then_it_closes_the_h5_file(mocker):
     spied_close.assert_called_once()
 
 
-def test_Beta1WellFile__opens_and_get_file_version():
-    wf = Beta1WellFile(
+def test_H5Wrapper__opens_and_get_file_version():
+    wf = H5Wrapper(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "2020_08_04_build_775",
@@ -78,8 +79,8 @@ def test_Beta1WellFile__opens_and_get_file_version():
     assert wf.get_file_version() == "0.2.1"
 
 
-def test_Beta1WellFile__opens_and_get_well_name():
-    wf = Beta1WellFile(
+def test_BaseWellFile__opens_and_get_well_name():
+    wf = BaseWellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "2020_08_04_build_775",
@@ -89,8 +90,8 @@ def test_Beta1WellFile__opens_and_get_well_name():
     assert wf.get_well_name() == "D6"
 
 
-def test_Beta1WellFile__opens_and_get_well_index():
-    wf = Beta1WellFile(
+def test_BaseWellFile__opens_and_get_well_index():
+    wf = BaseWellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "2020_08_04_build_775",
@@ -100,8 +101,8 @@ def test_Beta1WellFile__opens_and_get_well_index():
     assert wf.get_well_index() == 23
 
 
-def test_Beta1WellFile__opens_and_get_plate_barcode():
-    wf = Beta1WellFile(
+def test_BaseWellFile__opens_and_get_plate_barcode():
+    wf = BaseWellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "M120171010__2020_07_22_201922",
@@ -111,8 +112,8 @@ def test_Beta1WellFile__opens_and_get_plate_barcode():
     assert wf.get_plate_barcode() == "M120171010"
 
 
-def test_Beta1WellFile__opens_and_get_user_account():
-    wf = Beta1WellFile(
+def test_BaseWellFile__opens_and_get_user_account():
+    wf = BaseWellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "2020_08_04_build_775",
@@ -122,15 +123,15 @@ def test_Beta1WellFile__opens_and_get_user_account():
     assert wf.get_user_account() == UUID("455b93eb-c78f-4494-9f73-d3291130f126")
 
 
-def test_Beta1WellFile__get_unique_recording_key(generic_well_file):
+def test_BaseWellFile__get_unique_recording_key(generic_well_file):
     assert generic_well_file.get_unique_recording_key() == (
         "MA20001010",
         datetime.datetime(2020, 8, 4, 22, 1, 27, 491628, tzinfo=datetime.timezone.utc),
     )
 
 
-def test_Beta1WellFile__opens_and_get_customer_account():
-    wf = Beta1WellFile(
+def test_BaseWellFile__opens_and_get_customer_account():
+    wf = BaseWellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "M120171010__2020_07_22_201922",
@@ -140,14 +141,14 @@ def test_Beta1WellFile__opens_and_get_customer_account():
     assert wf.get_customer_account() == UUID("73f52be0-368c-42d8-a1fd-660d49ba5604")
 
 
-def test_Beta1WellFile__returns_time_index_of_request_to_start_recording(
+def test_BaseWellFile__returns_time_index_of_request_to_start_recording(
     generic_well_file_0_3_1,
 ):
     actual = generic_well_file_0_3_1.get_recording_start_index()
     assert actual == 392000
 
 
-def test_Beta1WellFile__get_timestamp_of_beginning_of_data_acquisition(
+def test_BaseWellFile__get_timestamp_of_beginning_of_data_acquisition(
     generic_well_file_0_3_1,
 ):
     actual = generic_well_file_0_3_1.get_timestamp_of_beginning_of_data_acquisition()
@@ -156,8 +157,8 @@ def test_Beta1WellFile__get_timestamp_of_beginning_of_data_acquisition(
     )
 
 
-def test_Beta1WellFile__opens_and_get_mantarray_serial_number():
-    wf = Beta1WellFile(
+def test_BaseWellFile__opens_and_get_mantarray_serial_number():
+    wf = BaseWellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "M120171010__2020_07_22_201922",
@@ -167,8 +168,8 @@ def test_Beta1WellFile__opens_and_get_mantarray_serial_number():
     assert wf.get_mantarray_serial_number() == "M02001900"
 
 
-def test_Beta1WellFile__opens_and_get_begin_recording():
-    wf = Beta1WellFile(
+def test_BaseWellFile__opens_and_get_begin_recording():
+    wf = BaseWellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "2020_08_04_build_775",
@@ -275,17 +276,17 @@ def test_WellFile_beta_2__get_raw_channel_raises_error_if_axis_not_present_in_fi
     assert f"{missing_axis} Axis" in str(exc_info.value)
 
 
-def test_Beta1WellFile__get_h5_attribute__can_access_arbitrary_metadata(
+def test_H5Wrapper__get_h5_attribute__can_access_arbitrary_metadata(
     generic_well_file_0_3_1,
 ):
     assert generic_well_file_0_3_1.get_h5_attribute(FILE_FORMAT_VERSION_METADATA_KEY) == "0.3.1"
 
 
-def test_Beta1WellFile__get_h5_file__returns_file_object(generic_well_file_0_3_1):
+def test_H5Wrapper__get_h5_file__returns_file_object(generic_well_file_0_3_1):
     assert isinstance(generic_well_file_0_3_1.get_h5_file(), h5py.File) is True
 
 
-def test_Beta1WellFile__get_h5_attribute__raises_error_if_attribute_is_not_found():
+def test_H5Wrapper__get_h5_attribute__raises_error_if_attribute_is_not_found():
     file_ver = "0.3.1"
     file_path = os.path.join(
         PATH_OF_CURRENT_FILE,
@@ -293,7 +294,7 @@ def test_Beta1WellFile__get_h5_attribute__raises_error_if_attribute_is_not_found
         f"v{file_ver}",
         "MA20123456__2020_08_17_145752__A1.h5",
     )
-    wf = Beta1WellFile(file_path)
+    wf = BaseWellFile(file_path)
     test_attr = "fake_attr"
     with pytest.raises(FileAttributeNotFoundError) as excinfo:
         wf.get_h5_attribute(test_attr)
@@ -303,7 +304,7 @@ def test_Beta1WellFile__get_h5_attribute__raises_error_if_attribute_is_not_found
     assert test_attr in str(excinfo.value)
 
 
-def test_Beta1WellFile__get_h5_attribute__raises_error_with_UUID_and_description_if_UUID_attribute_is_not_found():
+def test_H5Wrapper__get_h5_attribute__raises_error_with_UUID_and_description_if_UUID_attribute_is_not_found():
     file_ver = "0.1"
     file_path = os.path.join(
         PATH_OF_CURRENT_FILE,
@@ -311,7 +312,7 @@ def test_Beta1WellFile__get_h5_attribute__raises_error_with_UUID_and_description
         f"v{file_ver}",
         "MA20001100__2020_07_15_172203__A4.h5",
     )
-    wf = Beta1WellFile(file_path)
+    wf = BaseWellFile(file_path)
     test_attr = USER_ACCOUNT_ID_UUID
     test_attr_description = METADATA_UUID_DESCRIPTIONS[USER_ACCOUNT_ID_UUID]
     with pytest.raises(FileAttributeNotFoundError) as excinfo:
@@ -323,7 +324,7 @@ def test_Beta1WellFile__get_h5_attribute__raises_error_with_UUID_and_description
     assert "no UUID given" not in str(excinfo.value)
 
 
-def test_Beta1WellFile__get_h5_attribute__raises_error_with_unrecognized_UUID__if_UUID_attribute_is_not_found():
+def test_H5Wrapper__get_h5_attribute__raises_error_with_unrecognized_UUID__if_UUID_attribute_is_not_found():
     file_ver = "0.1"
     file_path = os.path.join(
         PATH_OF_CURRENT_FILE,
@@ -331,7 +332,7 @@ def test_Beta1WellFile__get_h5_attribute__raises_error_with_unrecognized_UUID__i
         f"v{file_ver}",
         "MA20001100__2020_07_15_172203__A4.h5",
     )
-    wf = Beta1WellFile(file_path)
+    wf = BaseWellFile(file_path)
     test_uuid = UUID("e07bae2d-c927-490f-876b-a7a79c2369e7")
     with pytest.raises(FileAttributeNotFoundError) as excinfo:
         wf.get_h5_attribute(str(test_uuid))
