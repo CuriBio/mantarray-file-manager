@@ -44,7 +44,9 @@ from .constants import UTC_FIRST_REF_DATA_POINT_UUID
 from .constants import UTC_FIRST_TISSUE_DATA_POINT_UUID
 from .constants import WELL_INDEX_UUID
 from .constants import WELL_NAME_UUID
+from .exceptions import AxisDataForSensorNotInFileError
 from .exceptions import FileAttributeNotFoundError
+from .exceptions import SensorDataNotInFileError
 from .exceptions import UnsupportedMantarrayFileVersionError
 from .exceptions import WellRecordingsNotFromSameSessionError
 
@@ -67,7 +69,7 @@ def get_unique_files_from_directory(directory: str) -> List[str]:
     Returns:
         A list of the file paths for all the h5 files in the directory.
     """
-    unique_files: List[str] = []
+    unique_files: List[str] = list()
 
     for path, _, files in os.walk(directory):
         for name in files:
@@ -75,13 +77,13 @@ def get_unique_files_from_directory(directory: str) -> List[str]:
                 continue
 
             file = os.path.join(path, name)
-            well = WellFile(file)
+            well = BaseWellFile(file)
             index = well.get_well_index()
             barcode = well.get_plate_barcode()
             start_time = well.get_begin_recording()
 
             for item in unique_files:
-                new_well = WellFile(item)
+                new_well = BaseWellFile(item)
                 if (
                     new_well.get_well_index() == index
                     and new_well.get_plate_barcode() == barcode
@@ -110,7 +112,7 @@ def get_specified_files(
     plate_recording_list: List[str] = []
 
     for file in unique_files:
-        well = WellFile(file)
+        well = BaseWellFile(file)
         if search_criteria == "Well Name" and well.get_well_name() == criteria_value:
             plate_recording_list.append(file)
         if search_criteria == "Plate Barcode" and well.get_plate_barcode() == criteria_value:
@@ -487,20 +489,25 @@ class WellFile(BaseWellFile):
 
         All values in array are int64
         """
-        # TODO raise error if sensor/axis pair is not present in data
-        if self._sensor_time_indices[sensor] is None:
-            # try:
-            sensor_time_offset_idx = list(self._sensor_axis_dict.keys()).index(sensor)
-            # except ValueError as e:
-            #     raise <New Error> from e  # sensor not found
-            self._sensor_time_indices[sensor] = (
-                self._h5_file[TIME_INDICES] - self._h5_file[TIME_OFFSETS][sensor_time_offset_idx, :]
-            )
-        if self._raw_channel_readings[sensor][axis] is None:
-            channel_idx = self._get_channel_idx(sensor, axis)
-            self._raw_channel_readings[sensor][axis] = self._h5_file[TISSUE_SENSOR_READINGS][
-                channel_idx, :
-            ]
+        try:
+            if self._sensor_time_indices[sensor] is None:
+                sensor_time_offset_idx = list(self._sensor_axis_dict.keys()).index(sensor)
+                self._sensor_time_indices[sensor] = (
+                    self._h5_file[TIME_INDICES]
+                    - self._h5_file[TIME_OFFSETS][sensor_time_offset_idx, :]
+                )
+        except KeyError as e:
+            raise SensorDataNotInFileError(sensor) from e
+
+        try:
+            if self._raw_channel_readings[sensor][axis] is None:
+                channel_idx = self._get_channel_idx(sensor, axis)
+                self._raw_channel_readings[sensor][axis] = self._h5_file[TISSUE_SENSOR_READINGS][
+                    channel_idx, :
+                ]
+        except KeyError as e:
+            raise AxisDataForSensorNotInFileError(sensor, axis) from e
+
         return np.array(
             [self._sensor_time_indices[sensor], self._raw_channel_readings[sensor][axis]],
             dtype=np.int64,
@@ -510,14 +517,13 @@ class WellFile(BaseWellFile):
         idx = 0
         for sensor_name, axes in self._sensor_axis_dict.items():
             if sensor_name == sensor:
-                # try:
                 return idx + axes.index(axis)
-                # except ValueError as e:
-                #     raise <New Error> from e  # axis not found
             idx += len(axes)
         else:
-            raise NotImplementedError()
-            # TODO this branch means the sensor wasn't found, but might be covered by try/except in get_raw_channel_reading
+            # this branch means the sensor wasn't found, but should be covered by try/except in get_raw_channel_reading
+            raise NotImplementedError(
+                "Sensor not found in data. This should be covered by prior checks"
+            )
 
 
 def find_start_index(from_start: int, old_data: NDArray[(1, Any), int]) -> int:
@@ -540,15 +546,15 @@ class PlateRecording:
         _files : WellFiles of all the file paths provided.
     """
 
-    def __init__(self, file_paths: Sequence[Union[str, WellFile]]) -> None:
-        self._files: List[WellFile] = list()
-        self._wells_by_index: Dict[int, WellFile] = dict()
+    def __init__(self, file_paths: Sequence[Union[str, BaseWellFile]]) -> None:
+        self._files: List[BaseWellFile] = list()
+        self._wells_by_index: Dict[int, BaseWellFile] = dict()
         min_supported_version = VersionInfo.parse(MIN_SUPPORTED_FILE_VERSION)
         for iter_file_path in file_paths:
 
             well_file = iter_file_path
             if isinstance(well_file, str):
-                well_file = WellFile(well_file)
+                well_file = BaseWellFile(well_file)
             file_version_str = well_file.get_file_version()
             if file_version_str.split(".") < min_supported_version:
                 raise UnsupportedMantarrayFileVersionError(file_version_str)
@@ -565,7 +571,7 @@ class PlateRecording:
     def from_directory(cls, dir_to_load_files_from: str) -> "PlateRecording":
         return cls(glob(os.path.join(dir_to_load_files_from, "*.h5")))
 
-    def get_well_by_index(self, well_index: int) -> WellFile:
+    def get_well_by_index(self, well_index: int) -> BaseWellFile:
         return self._wells_by_index[well_index]
 
     def get_wellfile_names(self) -> Sequence[str]:

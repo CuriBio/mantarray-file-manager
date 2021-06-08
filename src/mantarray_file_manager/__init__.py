@@ -61,8 +61,10 @@ from .constants import WELL_INDEX_UUID
 from .constants import WELL_NAME_UUID
 from .constants import WELL_ROW_UUID
 from .constants import XEM_SERIAL_NUMBER_UUID
+from .exceptions import AxisDataForSensorNotInFileError
 from .exceptions import FileAttributeNotFoundError
 from .exceptions import MantarrayFileNotLatestVersionError
+from .exceptions import SensorDataNotInFileError
 from .exceptions import UnsupportedFileMigrationPath
 from .exceptions import UnsupportedMantarrayFileVersionError
 from .exceptions import WellRecordingsNotFromSameSessionError
@@ -131,11 +133,7 @@ __all__ = [
     "migrate_to_latest_version",
     "UnsupportedFileMigrationPath",
     "BaseWellFile",
-    "WellFile_0_4_1",
-    "WellFile_0_3_1",
-    "WellFile_0_4_2",
     "file_writer",
-    "WELL_FILE_CLASSES",
     "UTC_TIMESTAMP_OF_FILE_VERSION_MIGRATION_UUID",
     "FILE_VERSION_PRIOR_TO_MIGRATION_UUID",
     "NOT_APPLICABLE_H5_METADATA",
@@ -152,4 +150,6 @@ __all__ = [
     "TIME_OFFSETS",
     "Beta1WellFile",
     "H5Wrapper",
+    "SensorDataNotInFileError",
+    "AxisDataForSensorNotInFileError",
 ]

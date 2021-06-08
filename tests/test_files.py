@@ -6,6 +6,7 @@ import time
 from uuid import UUID
 
 import h5py
+from mantarray_file_manager import AxisDataForSensorNotInFileError
 from mantarray_file_manager import Beta1WellFile
 from mantarray_file_manager import FILE_FORMAT_VERSION_METADATA_KEY
 from mantarray_file_manager import FileAttributeNotFoundError
@@ -14,6 +15,7 @@ from mantarray_file_manager import H5Wrapper
 from mantarray_file_manager import METADATA_UUID_DESCRIPTIONS
 from mantarray_file_manager import MIN_SUPPORTED_FILE_VERSION
 from mantarray_file_manager import PlateRecording
+from mantarray_file_manager import SensorDataNotInFileError
 from mantarray_file_manager import UnsupportedMantarrayFileVersionError
 from mantarray_file_manager import USER_ACCOUNT_ID_UUID
 from mantarray_file_manager import WellRecordingsNotFromSameSessionError
@@ -46,22 +48,22 @@ def test_H5Wrapper__opens_file_and_gets_file_version():
         "2020_08_04_build_775",
         "MA20001010__2020_08_04_220041__D6.h5",
     )
-    bwf = H5Wrapper(expected_path)
-    assert bwf.get_file_version() == "0.2.1"
-    assert isinstance(bwf.get_h5_file(), h5py.File)
-    assert bwf.get_file_name() == expected_path
+    wrapper = H5Wrapper(expected_path)
+    assert wrapper.get_file_version() == "0.2.1"
+    assert isinstance(wrapper.get_h5_file(), h5py.File)
+    assert wrapper.get_file_name() == expected_path
 
 
 def test_H5Wrapper__When_deleted__Then_it_closes_the_h5_file(mocker):
-    bwf = Beta1WellFile(
+    wrapper = H5Wrapper(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "2020_08_04_build_775",
             "MA20001010__2020_08_04_220041__D6.h5",
         )
     )
-    spied_close = mocker.spy(bwf.get_h5_file(), "close")
-    del bwf
+    spied_close = mocker.spy(wrapper.get_h5_file(), "close")
+    del wrapper
     spied_close.assert_called_once()
 
 
@@ -243,7 +245,7 @@ def test_Beta1WellFile__get_raw_reference_reading__has_correct_time_offset_at_in
 def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values(
     generic_well_file_1_0_0,
 ):
-    arr = generic_well_file_1_0_0.get_raw_channel_reading("A", "X")
+    arr = generic_well_file_1_0_0.get_raw_channel_reading("C", "Z")
     assert arr.shape == (2, 201)
     assert arr.dtype == np.int64
     assert arr[1, 0] == 0
@@ -257,15 +259,20 @@ def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values(
 def test_WellFile_beta_2__get_raw_channel_raises_error_if_sensor_not_present_in_file(
     generic_well_file_1_0_0,
 ):
-    # TODO test a missing sensor
-    pass
+    missing_sensor = "B"
+    with pytest.raises(SensorDataNotInFileError, match=f"Sensor {missing_sensor}"):
+        generic_well_file_1_0_0.get_raw_channel_reading(missing_sensor, "Y")
 
 
 def test_WellFile_beta_2__get_raw_channel_raises_error_if_axis_not_present_in_file_for_a_sensor_that_is_present(
     generic_well_file_1_0_0,
 ):
-    # TODO test a missing axis
-    pass
+    sensor = "C"
+    missing_axis = "Y"
+    with pytest.raises(AxisDataForSensorNotInFileError) as exc_info:
+        generic_well_file_1_0_0.get_raw_channel_reading(sensor, missing_axis)
+    assert f"Sensor {sensor}" in str(exc_info.value)
+    assert f"{missing_axis} Axis" in str(exc_info.value)
 
 
 def test_Beta1WellFile__get_h5_attribute__can_access_arbitrary_metadata(
@@ -533,7 +540,6 @@ def test_get_raw_tissue_reading__performance(generic_well_file_0_3_1):
     # start:                        63748857.45
     # remove slow loop:              1382431.61
     # *cache raw tissue reading:       47306.83
-    # adding beta 2 support:           59468.82  # TODO
 
     num_iterations = 100
     start = time.perf_counter_ns()
@@ -552,6 +558,19 @@ def test_get_raw_reference_reading__performance(generic_well_file_0_3_1):
     start = time.perf_counter_ns()
     for _ in range(num_iterations):
         generic_well_file_0_3_1.get_raw_reference_reading()
+    dur = time.perf_counter_ns() - start
+    dur_per_iter = dur / num_iterations
+    # print(dur_per_iter)
+    assert dur_per_iter < 10000000
+
+
+def test_get_raw_channel_reading__performance(generic_well_file_1_0_0):
+    # start                            25483.49
+
+    num_iterations = 100
+    start = time.perf_counter_ns()
+    for _ in range(num_iterations):
+        generic_well_file_1_0_0.get_raw_channel_reading("A", "X")
     dur = time.perf_counter_ns() - start
     dur_per_iter = dur / num_iterations
     # print(dur_per_iter)
