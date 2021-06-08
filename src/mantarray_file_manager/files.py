@@ -2,6 +2,7 @@
 """Classes and functions for finding and reading files."""
 import datetime
 from glob import glob
+import json
 import os
 from typing import Any
 from typing import Dict
@@ -14,7 +15,6 @@ from typing import Union
 from uuid import UUID
 
 import h5py
-from immutabledict import immutabledict
 from nptyping import NDArray
 import numpy as np
 from semver import VersionInfo
@@ -24,6 +24,7 @@ from .constants import CUSTOMER_ACCOUNT_ID_UUID
 from .constants import DATETIME_STR_FORMAT
 from .constants import FILE_FORMAT_VERSION_METADATA_KEY
 from .constants import IS_FILE_ORIGINAL_UNTRIMMED_UUID
+from .constants import MAGNETOMETER_CONFIGURATION_UUID
 from .constants import MANTARRAY_SERIAL_NUMBER_UUID
 from .constants import MICROSECONDS_PER_CENTIMILLISECOND
 from .constants import MIN_SUPPORTED_FILE_VERSION
@@ -31,6 +32,8 @@ from .constants import PLATE_BARCODE_UUID
 from .constants import REF_SAMPLING_PERIOD_UUID
 from .constants import REFERENCE_SENSOR_READINGS
 from .constants import START_RECORDING_TIME_INDEX_UUID
+from .constants import TIME_INDICES
+from .constants import TIME_OFFSETS
 from .constants import TISSUE_SAMPLING_PERIOD_UUID
 from .constants import TISSUE_SENSOR_READINGS
 from .constants import TRIMMED_TIME_FROM_ORIGINAL_START_UUID
@@ -174,7 +177,7 @@ def _extract_datetime_from_h5(
     )
 
 
-class BasicWellFile:
+class H5Wrapper:
     """Very thin wrapper around an H5 file for a single well of data.
 
     Used typically just for assessing file version when migrating.
@@ -293,13 +296,12 @@ class LikelyConsistentMetadata(
     """A wrapper for mixins that will likely be in all future file formats."""
 
 
-class WellFile(
-    BasicWellFile, LikelyConsistentMetadata
+class BaseWellFile(
+    H5Wrapper, LikelyConsistentMetadata
 ):  # pylint: disable=too-many-ancestors # Eli (7/28/20): I don't see a way around this...we need to subclass h5py File
     """Wrapper around an H5 file for a single well of data.
 
-    This is only guaranteed to function correctly on the current working file format version.
-    Use the file migrate_to_latest_version to get files up to date with the current working version.
+    abstract class containing the most generic functionality of Well Files.
 
     Args:
         file_name: The path of the H5 file to open.
@@ -307,11 +309,6 @@ class WellFile(
     Attributes:
         _h5_file: The opened H5 file object.
     """
-
-    def __init__(self, file_name: str) -> None:
-        super().__init__(file_name)
-        self._raw_tissue_reading: Optional[NDArray[(Any, Any), int]] = None
-        self._raw_ref_reading: Optional[NDArray[(Any, Any), int]] = None
 
     def get_unique_recording_key(self) -> Tuple[str, datetime.datetime]:
         barcode = self.get_plate_barcode()
@@ -371,7 +368,21 @@ class WellFile(
             )
         )
 
-    def get_raw_tissue_reading(self) -> NDArray[(Any, Any), int]:
+
+class Beta1WellFile(BaseWellFile):
+    """Wrapper around H5 file of latest Beta 1 version.
+
+    This is only guaranteed to function correctly on the latest Beta 1
+    file format version. Use the file migrate_to_latest_version to get
+    files up to date with the current working version.
+    """
+
+    def __init__(self, file_name: str) -> None:
+        super().__init__(file_name)
+        self._raw_tissue_reading: Optional[NDArray[(2, Any), int]] = None
+        self._raw_ref_reading: Optional[NDArray[(2, Any), int]] = None
+
+    def get_raw_tissue_reading(self) -> NDArray[(2, Any), int]:
         """Get a value vs time array.
 
         Time (centi-milliseconds) is first dimension, value is second
@@ -383,7 +394,7 @@ class WellFile(
             self._raw_tissue_reading = self._load_reading(TISSUE_SENSOR_READINGS)
         return self._raw_tissue_reading
 
-    def get_raw_reference_reading(self) -> NDArray[(Any, Any), int]:
+    def get_raw_reference_reading(self) -> NDArray[(2, Any), int]:
         """Get a reference value vs time array.
 
         Time (centi-milliseconds) is first dimension, reference value is second
@@ -395,7 +406,7 @@ class WellFile(
             self._raw_ref_reading = self._load_reading(REFERENCE_SENSOR_READINGS)
         return self._raw_ref_reading
 
-    def _load_reading(self, reading_type: str) -> NDArray[(Any, Any), int]:
+    def _load_reading(self, reading_type: str) -> NDArray[(2, Any), int]:
         if reading_type not in (TISSUE_SENSOR_READINGS, REFERENCE_SENSOR_READINGS):
             raise NotImplementedError(reading_type)
         recording_start_index_useconds = (
@@ -422,20 +433,13 @@ class WellFile(
         )
         time_step = int(sampling_period / MICROSECONDS_PER_CENTIMILLISECOND)
 
-        # Tanner (5/6/21): adding `[:]` loads the data as a numpy array giving us more flexibility of multi-dimensional arrays
-        data = self._h5_file[reading_type][:]
-        if len(data.shape) == 1:
-            data = data.reshape(1, data.shape[0])
-        # fmt: off
-        # Tanner (5/6/21): black reformatted this into a very ugly few lines of code
-        times = np.mgrid[: data.shape[1],] * time_step
-        # fmt: on
+        data = self._h5_file[reading_type]
+        num_data_points = len(data)
+        times = np.arange(0, num_data_points * time_step, time_step)
         time_delta_centimilliseconds = self._check_for_trimmed_file(
-            times[0], time_delta_centimilliseconds
+            times, time_delta_centimilliseconds
         )
-        return np.concatenate(  # pylint: disable=unexpected-keyword-arg # Tanner (5/6/21): unsure why pylint thinks dtype is an unexpected kwarg for np.concatenate
-            (times + time_delta_centimilliseconds, data), dtype=np.int32
-        )
+        return np.array((times + time_delta_centimilliseconds, data), dtype=np.int32)
 
     def _check_for_trimmed_file(
         self, times: NDArray[(1, Any), int], time_delta_centimilliseconds: int
@@ -454,6 +458,68 @@ class WellFile(
         return new_time_delta
 
 
+class WellFile(BaseWellFile):
+    """Wrapper around H5 file of latest file format version.
+
+    This is only guaranteed to function correctly on the latest file
+    format version. Use the file migrate_to_latest_version to get files
+    up to date with the current working version.
+    """
+
+    def __init__(self, file_name: str) -> None:
+        super().__init__(file_name)
+        self._sensor_axis_dict: Dict[str, List[str]] = json.loads(
+            _get_file_attr(
+                self._h5_file,
+                str(MAGNETOMETER_CONFIGURATION_UUID),
+                self._file_version,
+            )
+        )
+        self._sensor_time_indices: Dict[str, NDArray[(1, Any), int]] = {
+            sensor: None for sensor in self._sensor_axis_dict.keys()
+        }
+        self._raw_channel_readings: Dict[str, Dict[str, NDArray[(1, Any), int]]] = {
+            sensor: {axis: None for axis in axes} for sensor, axes in self._sensor_axis_dict.items()
+        }
+
+    def get_raw_channel_reading(self, sensor: str, axis: str) -> NDArray[(2, Any), int]:
+        """Get a value vs. time array of a single axis on a single sensor.
+
+        All values in array are int64
+        """
+        # TODO raise error if sensor/axis pair is not present in data
+        if self._sensor_time_indices[sensor] is None:
+            # try:
+            sensor_time_offset_idx = list(self._sensor_axis_dict.keys()).index(sensor)
+            # except ValueError as e:
+            #     raise <New Error> from e  # sensor not found
+            self._sensor_time_indices[sensor] = (
+                self._h5_file[TIME_INDICES] - self._h5_file[TIME_OFFSETS][sensor_time_offset_idx, :]
+            )
+        if self._raw_channel_readings[sensor][axis] is None:
+            channel_idx = self._get_channel_idx(sensor, axis)
+            self._raw_channel_readings[sensor][axis] = self._h5_file[TISSUE_SENSOR_READINGS][
+                channel_idx, :
+            ]
+        return np.array(
+            [self._sensor_time_indices[sensor], self._raw_channel_readings[sensor][axis]],
+            dtype=np.int64,
+        )
+
+    def _get_channel_idx(self, sensor: str, axis: str) -> int:
+        idx = 0
+        for sensor_name, axes in self._sensor_axis_dict.items():
+            if sensor_name == sensor:
+                # try:
+                return idx + axes.index(axis)
+                # except ValueError as e:
+                #     raise <New Error> from e  # axis not found
+            idx += len(axes)
+        else:
+            raise NotImplementedError()
+            # TODO this branch means the sensor wasn't found, but might be covered by try/except in get_raw_channel_reading
+
+
 def find_start_index(from_start: int, old_data: NDArray[(1, Any), int]) -> int:
     start_index = 0
     time_from_start = 0
@@ -462,42 +528,6 @@ def find_start_index(from_start: int, old_data: NDArray[(1, Any), int]) -> int:
         start_index += 1
     # loop iterates 1 past the desired index, so subtract 1
     return start_index - 1
-
-
-class WellFile_0_3_1(  # pylint:disable=invalid-name,too-many-ancestors # Eli (1/18/21): this seems like a good way to specifically name these historical class objects. I don't see a way around this ancestor issue...we need to subclass h5py File
-    WellFile
-):
-    """Historical class to open WellFiles in version 0.3.1.
-
-    Typically kept around for test cases and migration scripts.
-
-    If the main WellFile object stops being compatible, then old
-    deprecated methods should be moved here.
-    """
-
-
-class WellFile_0_4_1(  # pylint:disable=invalid-name,too-many-ancestors # Eli (1/18/21): this seems like a good way to specifically name these historical class objects. I don't see a way around this ancestor issue...we need to subclass h5py File
-    WellFile
-):
-    """Historical class to open WellFiles in version 0.4.1.
-
-    Typically kept around for test cases and migration scripts.
-
-    If the main WellFile object stops being compatible, then old
-    deprecated methods should be moved here.
-    """
-
-
-class WellFile_0_4_2(  # pylint:disable=invalid-name,too-many-ancestors # Eli (1/18/21): this seems like a good way to specifically name these historical class objects. I don't see a way around this ancestor issue...we need to subclass h5py File
-    WellFile
-):
-    """Historical class to open WellFiles in version 0.4.2.
-
-    Typically kept around for test cases and migration scripts.
-
-    If the main WellFile object stops being compatible, then old
-    deprecated methods should be moved here.
-    """
 
 
 class PlateRecording:
@@ -552,8 +582,3 @@ class PlateRecording:
 
     def get_well_indices(self) -> Tuple[int, ...]:
         return tuple(sorted(self._wells_by_index.keys()))
-
-
-WELL_FILE_CLASSES = immutabledict(
-    {"0.3.1": WellFile_0_3_1, "0.4.1": WellFile_0_4_1, "0.4.2": WellFile_0_4_2}
-)

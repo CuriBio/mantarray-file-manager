@@ -39,6 +39,8 @@ from mantarray_file_manager import SOFTWARE_BUILD_NUMBER_UUID
 from mantarray_file_manager import SOFTWARE_RELEASE_VERSION_UUID
 from mantarray_file_manager import START_RECORDING_TIME_INDEX_UUID
 from mantarray_file_manager import TAMPER_FLAG_UUID
+from mantarray_file_manager import TIME_INDICES
+from mantarray_file_manager import TIME_OFFSETS
 from mantarray_file_manager import TISSUE_SAMPLING_PERIOD_UUID
 from mantarray_file_manager import TISSUE_SENSOR_READINGS
 from mantarray_file_manager import TOTAL_WELL_COUNT_UUID
@@ -177,3 +179,5 @@ def test_file_migration_paths():
 def test_sensor_data_types():
     assert TISSUE_SENSOR_READINGS == "tissue_sensor_readings"
     assert REFERENCE_SENSOR_READINGS == "reference_sensor_readings"
+    assert TIME_INDICES == "time_indices"
+    assert TIME_OFFSETS == "time_offsets"

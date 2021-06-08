@@ -35,10 +35,9 @@ from .exceptions import MantarrayFileNotLatestVersionError
 from .exceptions import TooTrimmedError
 from .exceptions import UnsupportedArgumentError
 from .exceptions import UnsupportedFileMigrationPath
-from .files import BasicWellFile
+from .files import Beta1WellFile
 from .files import find_start_index
-from .files import WELL_FILE_CLASSES
-from .files import WellFile
+from .files import H5Wrapper
 
 
 def _print(msg: Any) -> None:
@@ -67,9 +66,9 @@ class MantarrayH5FileCreator(
 
 
 def _get_format_version_of_file(file_path: str) -> str:
-    file = BasicWellFile(file_path)
-    file_version = file.get_file_version()
-    file.get_h5_file().close()
+    the_file = H5Wrapper(file_path)
+    file_version = the_file.get_file_version()
+    the_file.get_h5_file().close()
     return file_version
 
 
@@ -92,7 +91,7 @@ def migrate_to_next_version(
         working_directory = getcwd()
     if file_version not in FILE_MIGRATION_PATHS:
         raise UnsupportedFileMigrationPath(file_version)
-    old_file = WELL_FILE_CLASSES[file_version](starting_file_path)
+    old_file = Beta1WellFile(starting_file_path)
     new_file_version = FILE_MIGRATION_PATHS[file_version]
     old_file_basename = ntpath.basename(starting_file_path)
     old_file_basename_no_suffix = old_file_basename[:-3]
@@ -205,7 +204,7 @@ def h5_file_trimmer(
         CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION,
     ):
         raise MantarrayFileNotLatestVersionError(old_file_version)
-    old_file = WellFile(file_path)
+    old_file = Beta1WellFile(file_path)
 
     # finding amount to trim
     old_raw_reference_data = old_file.get_raw_reference_reading()
@@ -278,10 +277,8 @@ def h5_file_trimmer(
         (REFERENCE_SENSOR_READINGS, reference_data_start_index, reference_data_last_index),
     ):
         data = old_h5_file[reading_type][:]
-        if len(data.shape) == 1:
-            data = data.reshape(1, data.shape[0])
         trimmed_data = data[
-            :, start_idx : last_idx + 1
+            start_idx : last_idx + 1
         ]  # +1 because needs to be inclusive of last index
         new_file.create_dataset(reading_type, data=trimmed_data)
 

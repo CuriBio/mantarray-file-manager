@@ -42,6 +42,8 @@ from .constants import SOFTWARE_BUILD_NUMBER_UUID
 from .constants import SOFTWARE_RELEASE_VERSION_UUID
 from .constants import START_RECORDING_TIME_INDEX_UUID
 from .constants import TAMPER_FLAG_UUID
+from .constants import TIME_INDICES
+from .constants import TIME_OFFSETS
 from .constants import TISSUE_SAMPLING_PERIOD_UUID
 from .constants import TISSUE_SENSOR_READINGS
 from .constants import TOTAL_WELL_COUNT_UUID
@@ -67,13 +69,11 @@ from .exceptions import WellRecordingsNotFromSameSessionError
 from .file_writer import MantarrayH5FileCreator
 from .file_writer import migrate_to_latest_version
 from .file_writer import migrate_to_next_version
-from .files import BasicWellFile
+from .files import BaseWellFile
+from .files import Beta1WellFile
+from .files import H5Wrapper
 from .files import PlateRecording
-from .files import WELL_FILE_CLASSES
 from .files import WellFile
-from .files import WellFile_0_3_1
-from .files import WellFile_0_4_1
-from .files import WellFile_0_4_2
 
 
 __all__ = [
@@ -130,7 +130,7 @@ __all__ = [
     "migrate_to_next_version",
     "migrate_to_latest_version",
     "UnsupportedFileMigrationPath",
-    "BasicWellFile",
+    "BaseWellFile",
     "WellFile_0_4_1",
     "WellFile_0_3_1",
     "WellFile_0_4_2",
@@ -148,4 +148,8 @@ __all__ = [
     "PCB_SERIAL_NUMBER_UUID",
     "CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION",
     "MAGNETOMETER_CONFIGURATION_UUID",
+    "TIME_INDICES",
+    "TIME_OFFSETS",
+    "Beta1WellFile",
+    "H5Wrapper",
 ]

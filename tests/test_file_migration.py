@@ -6,12 +6,13 @@ import tempfile
 from freezegun import freeze_time
 from mantarray_file_manager import BACKEND_LOG_UUID
 from mantarray_file_manager import BARCODE_IS_FROM_SCANNER_UUID
-from mantarray_file_manager import BasicWellFile
+from mantarray_file_manager import Beta1WellFile
 from mantarray_file_manager import COMPUTER_NAME_HASH_UUID
 from mantarray_file_manager import CURRENT_BETA1_HDF5_FILE_FORMAT_VERSION
 from mantarray_file_manager import FILE_MIGRATION_PATHS
 from mantarray_file_manager import FILE_VERSION_PRIOR_TO_MIGRATION_UUID
 from mantarray_file_manager import file_writer
+from mantarray_file_manager import H5Wrapper
 from mantarray_file_manager import IS_FILE_ORIGINAL_UNTRIMMED_UUID
 from mantarray_file_manager import MantarrayH5FileCreator
 from mantarray_file_manager import migrate_to_latest_version
@@ -22,11 +23,8 @@ from mantarray_file_manager import TRIMMED_TIME_FROM_ORIGINAL_END_UUID
 from mantarray_file_manager import TRIMMED_TIME_FROM_ORIGINAL_START_UUID
 from mantarray_file_manager import UnsupportedFileMigrationPath
 from mantarray_file_manager import UTC_TIMESTAMP_OF_FILE_VERSION_MIGRATION_UUID
-from mantarray_file_manager import WELL_FILE_CLASSES
 from mantarray_file_manager import WELL_INDEX_UUID
 from mantarray_file_manager import WELL_NAME_UUID
-from mantarray_file_manager import WellFile_0_3_1
-from mantarray_file_manager import WellFile_0_4_1
 import numpy as np
 import pytest
 from semver import VersionInfo
@@ -72,8 +70,8 @@ def test_migrate_to_next_version__When_invoked_on_a_0_3_1_file__Then_the_new_fil
         new_file_path = migrate_to_next_version(
             PATH_TO_GENERIC_0_3_1_FILE, working_directory=tmp_dir
         )
-        wf = WellFile_0_4_1(new_file_path)
-        old_wf = WellFile_0_3_1(PATH_TO_GENERIC_0_3_1_FILE)
+        wf = Beta1WellFile(new_file_path)
+        old_wf = Beta1WellFile(PATH_TO_GENERIC_0_3_1_FILE)
         assert wf.get_file_version() == "0.4.1"
 
         # old metadata (since it is all copied by default, testing a subset seems reasonable for now)
@@ -110,8 +108,8 @@ def test_migrate_to_next_version__When_invoked_on_a_0_4_1_file__Then_the_new_fil
             PATH_TO_GENERIC_0_4_1_FILE, working_directory=tmp_dir
         )
 
-        wf = WELL_FILE_CLASSES[new_version](new_file_path)
-        old_wf = WELL_FILE_CLASSES[old_version](PATH_TO_GENERIC_0_4_1_FILE)
+        wf = Beta1WellFile(new_file_path)
+        old_wf = Beta1WellFile(PATH_TO_GENERIC_0_4_1_FILE)
         assert wf.get_file_version() == new_version
 
         # old metadata (since it is all copied by default, testing a subset seems reasonable for now)
@@ -177,6 +175,6 @@ def test_migrate_to_latest_version__When_invoked_on_a_0_3_1_file__Then_the_retur
         )
 
         assert path_to_latest.startswith(tmp_dir)
-        latest_file = BasicWellFile(path_to_latest)
+        latest_file = H5Wrapper(path_to_latest)
         assert latest_file.get_file_version() == CURRENT_BETA1_HDF5_FILE_FORMAT_VERSION
         latest_file.get_h5_file().close()

@@ -2,6 +2,7 @@
 import os
 import tempfile
 
+from mantarray_file_manager import Beta1WellFile
 from mantarray_file_manager import migrate_to_latest_version
 from mantarray_file_manager import WellFile
 from mantarray_file_manager.file_writer import h5_file_trimmer
@@ -54,7 +55,8 @@ def fixture_trimmed_file_path():
 
 @pytest.fixture(scope="function", name="generic_well_file")
 def fixture_generic_well_file():
-    wf = WellFile(
+    # TODO rename this
+    wf = Beta1WellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "2020_08_04_build_775",
@@ -66,13 +68,13 @@ def fixture_generic_well_file():
 
 @pytest.fixture(scope="function", name="generic_well_file_0_3_1")
 def fixture_generic_well_file_0_3_1():
-    wf = WellFile(PATH_TO_GENERIC_0_3_1_FILE)
+    wf = Beta1WellFile(PATH_TO_GENERIC_0_3_1_FILE)
     yield wf
 
 
 @pytest.fixture(scope="function", name="generic_well_file_0_3_1__2")
 def fixture_generic_well_file_0_3_1__2():
-    wf = WellFile(
+    wf = Beta1WellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
             "h5",
@@ -83,14 +85,17 @@ def fixture_generic_well_file_0_3_1__2():
     yield wf
 
 
+PATH_TO_GENERIC_1_0_0_FILE = os.path.join(
+    PATH_OF_CURRENT_FILE, "beta_2_h5", "v1.0.0", "MA200440001__2021_05_24_212304__A1.h5"
+)
+
+
 @pytest.fixture(scope="module", name="current_beta2_version_file_path")
 def fixture_current_beta2_version_file_path():
-    # TODO Tanner (5/6/21): replace this with a real beta 2 file as soon as one is made and update the tests that use this file
-    yield os.path.join(PATH_OF_CURRENT_FILE, "beta_2_h5", "v1.0.0", "dummy.h5")
+    yield PATH_TO_GENERIC_1_0_0_FILE
 
 
 @pytest.fixture(scope="function", name="generic_well_file_1_0_0")
 def fixture_generic_well_file_1_0_0():
-    # TODO see note in fixture above
-    wf = WellFile(os.path.join(PATH_OF_CURRENT_FILE, "beta_2_h5", "v1.0.0", "dummy.h5"))
+    wf = WellFile(PATH_TO_GENERIC_1_0_0_FILE)
     yield wf
