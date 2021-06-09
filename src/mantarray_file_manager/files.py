@@ -484,6 +484,9 @@ class WellFile(BaseWellFile):
             sensor: {axis: None for axis in axes} for sensor, axes in self._sensor_axis_dict.items()
         }
 
+    def get_time_indices(self) -> NDArray[(1, Any), int]:
+        return self._h5_file[TIME_INDICES]
+
     def get_raw_channel_reading(self, sensor: str, axis: str) -> NDArray[(2, Any), int]:
         """Get a value vs. time array of a single axis on a single sensor.
 
@@ -493,8 +496,7 @@ class WellFile(BaseWellFile):
             if self._sensor_time_indices[sensor] is None:
                 sensor_time_offset_idx = list(self._sensor_axis_dict.keys()).index(sensor)
                 self._sensor_time_indices[sensor] = (
-                    self._h5_file[TIME_INDICES]
-                    - self._h5_file[TIME_OFFSETS][sensor_time_offset_idx, :]
+                    self.get_time_indices() - self._h5_file[TIME_OFFSETS][sensor_time_offset_idx, :]
                 )
         except KeyError as e:
             raise SensorDataNotInFileError(sensor) from e

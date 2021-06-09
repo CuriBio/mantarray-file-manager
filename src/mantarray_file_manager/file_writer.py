@@ -27,6 +27,8 @@ from .constants import IS_FILE_ORIGINAL_UNTRIMMED_UUID
 from .constants import NOT_APPLICABLE_H5_METADATA
 from .constants import ORIGINAL_FILE_VERSION_UUID
 from .constants import REFERENCE_SENSOR_READINGS
+from .constants import TIME_INDICES
+from .constants import TIME_OFFSETS
 from .constants import TISSUE_SENSOR_READINGS
 from .constants import TRIMMED_TIME_FROM_ORIGINAL_END_UUID
 from .constants import TRIMMED_TIME_FROM_ORIGINAL_START_UUID
@@ -38,6 +40,7 @@ from .exceptions import UnsupportedFileMigrationPath
 from .files import Beta1WellFile
 from .files import find_start_index
 from .files import H5Wrapper
+from .files import WellFile
 
 
 def _print(msg: Any) -> None:
@@ -198,39 +201,45 @@ def h5_file_trimmer(
     if from_end is None or from_start is None:
         raise UnsupportedArgumentError()
 
-    old_file_version = _get_format_version_of_file(file_path)
-    if old_file_version not in (
-        CURRENT_BETA1_HDF5_FILE_FORMAT_VERSION,
-        CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION,
-    ):
-        raise MantarrayFileNotLatestVersionError(old_file_version)
-    old_file = Beta1WellFile(file_path)
+    file_version = _get_format_version_of_file(file_path)
+    old_file: Union[WellFile, Beta1WellFile]
+    if file_version == CURRENT_BETA1_HDF5_FILE_FORMAT_VERSION:
+        old_file = Beta1WellFile(file_path)
+    elif file_version == CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION:
+        old_file = WellFile(file_path)
+    else:
+        raise MantarrayFileNotLatestVersionError(file_version)
 
     # finding amount to trim
-    old_raw_reference_data = old_file.get_raw_reference_reading()
-    old_tissue_data = old_file.get_raw_tissue_reading()
+    old_time_indices = (
+        old_file.get_time_indices()
+        if isinstance(old_file, WellFile)
+        else old_file.get_raw_tissue_reading()[0]
+    )
 
-    tissue_data_start_val = old_tissue_data[0][0]
-    tissue_data_last_val = old_tissue_data[0][-1]
-    tissue_data_start_index = find_start_index(from_start, old_tissue_data[0])
-    tissue_data_last_index = _find_last_index(from_end, old_tissue_data)
+    tissue_data_start_val = old_time_indices[0]
+    tissue_data_last_val = old_time_indices[-1]
+    tissue_data_start_index = find_start_index(from_start, old_time_indices)
+    tissue_data_last_index = _find_last_index(from_end, old_time_indices)
 
-    actual_start_trimmed = old_tissue_data[0][tissue_data_start_index] - tissue_data_start_val
+    actual_start_trimmed = old_time_indices[tissue_data_start_index] - tissue_data_start_val
     if actual_start_trimmed != from_start:
         _print(
             f"{actual_start_trimmed} centimilliseconds were trimmed from the start instead of {from_start}"
         )
-    actual_end_trimmed = tissue_data_last_val - old_tissue_data[0][tissue_data_last_index]
+    actual_end_trimmed = tissue_data_last_val - old_time_indices[tissue_data_last_index]
     if actual_end_trimmed != from_end:
         _print(
             f"{actual_end_trimmed} centimilliseconds were trimmed from the end instead of {from_end}"
         )
-    reference_data_start_index = find_start_index(actual_start_trimmed, old_raw_reference_data[0])
-    reference_data_last_index = _find_last_index(actual_end_trimmed, old_raw_reference_data)
-    if (
-        reference_data_start_index >= reference_data_last_index
-        or tissue_data_start_index >= tissue_data_last_index
-    ):
+
+    is_file_too_trimmed = tissue_data_start_index >= tissue_data_last_index
+    if isinstance(old_file, Beta1WellFile):
+        old_raw_reference_data = old_file.get_raw_reference_reading()[0]
+        reference_data_start_index = find_start_index(actual_start_trimmed, old_raw_reference_data)
+        reference_data_last_index = _find_last_index(actual_end_trimmed, old_raw_reference_data)
+        is_file_too_trimmed |= reference_data_start_index >= reference_data_last_index
+    if is_file_too_trimmed:
         total_time = tissue_data_last_val - tissue_data_start_val
         raise TooTrimmedError(from_start, from_end, total_time)
 
@@ -272,15 +281,23 @@ def h5_file_trimmer(
     for iter_metadata_key, iter_metadata_value in metadata_to_create:
         new_file.attrs[str(iter_metadata_key)] = iter_metadata_value
     # add trimmed data
-    for reading_type, start_idx, last_idx in (
-        (TISSUE_SENSOR_READINGS, tissue_data_start_index, tissue_data_last_index),
-        (REFERENCE_SENSOR_READINGS, reference_data_start_index, reference_data_last_index),
-    ):
-        data = old_h5_file[reading_type][:]
-        trimmed_data = data[
-            start_idx : last_idx + 1
-        ]  # +1 because needs to be inclusive of last index
-        new_file.create_dataset(reading_type, data=trimmed_data)
+    if file_version == CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION:
+        for reading_type in (TIME_INDICES, TIME_OFFSETS, TISSUE_SENSOR_READINGS):
+            data = old_h5_file[reading_type][:]
+            trimmed_data = (
+                data[tissue_data_start_index : tissue_data_last_index + 1]
+                if len(data.shape) == 1
+                else data[:, tissue_data_start_index : tissue_data_last_index + 1]
+            )
+            new_file.create_dataset(reading_type, data=trimmed_data)
+    else:
+        for reading_type, start_idx, last_idx in (
+            (TISSUE_SENSOR_READINGS, tissue_data_start_index, tissue_data_last_index),
+            (REFERENCE_SENSOR_READINGS, reference_data_start_index, reference_data_last_index),
+        ):
+            data = old_h5_file[reading_type][:]
+            trimmed_data = data[start_idx : last_idx + 1]
+            new_file.create_dataset(reading_type, data=trimmed_data)
 
     # close both files to avoid corruption
     old_h5_file.close()
@@ -288,11 +305,11 @@ def h5_file_trimmer(
     return new_file_name
 
 
-def _find_last_index(from_end: int, old_data: NDArray[(Any, Any), int]) -> int:
-    last_index = len(old_data[0]) - 1
+def _find_last_index(from_end: int, old_data: NDArray[(1, Any), int]) -> int:
+    last_index = len(old_data) - 1
     time_elapsed = 0
     while last_index > 0 and from_end >= time_elapsed:
-        time_elapsed += old_data[0][last_index] - old_data[0][last_index - 1]
+        time_elapsed += old_data[last_index] - old_data[last_index - 1]
         last_index -= 1
     last_index += 1
     return last_index

@@ -16,6 +16,7 @@ from mantarray_file_manager import TRIMMED_TIME_FROM_ORIGINAL_END_UUID
 from mantarray_file_manager import TRIMMED_TIME_FROM_ORIGINAL_START_UUID
 from mantarray_file_manager import WELL_INDEX_UUID
 from mantarray_file_manager import WELL_NAME_UUID
+from mantarray_file_manager import WellFile
 from mantarray_file_manager.exceptions import TooTrimmedError
 from mantarray_file_manager.exceptions import UnsupportedArgumentError
 from mantarray_file_manager.file_writer import h5_file_trimmer
@@ -257,21 +258,23 @@ def test_h5_file_trimmer__When_invoked_on_a_trimmed_file__Then_the_new_file_is_a
         wf.get_h5_file().close()  # safe clean-up when running CI on windows systems
 
 
-# TODO
-# def test_h5_file_trimmer__correctly_trims_beta_2_file(current_beta2_version_file_path):
-#     with tempfile.TemporaryDirectory() as tmp_dir:
-#         new_file_path = h5_file_trimmer(current_beta2_version_file_path, tmp_dir, 1000, 1000)
-#         wf = Beta1WellFile(new_file_path)
+def test_h5_file_trimmer__correctly_trims_beta_2_file(current_beta2_version_file_path):
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        new_file_path = h5_file_trimmer(current_beta2_version_file_path, tmp_dir, 10000, 10000)
+        wf = WellFile(new_file_path)
 
-#         assert wf.get_h5_attribute(str(TRIMMED_TIME_FROM_ORIGINAL_START_UUID)) == 1000
-#         assert wf.get_h5_attribute(str(TRIMMED_TIME_FROM_ORIGINAL_END_UUID)) == 1000
+        assert wf.get_h5_attribute(str(TRIMMED_TIME_FROM_ORIGINAL_START_UUID)) == 10000
+        assert wf.get_h5_attribute(str(TRIMMED_TIME_FROM_ORIGINAL_END_UUID)) == 10000
 
-#         tissue_data = wf.get_raw_tissue_reading()
-#         assert tissue_data[0][0] == -6120
-#         assert tissue_data[0][-1] == 880
-#         assert tissue_data[1][0] == 1
-#         assert tissue_data[1][-1] == 8
-#         assert tissue_data[9][0] == 81
-#         assert tissue_data[9][-1] == 88=
+        ax_channel_data = wf.get_raw_channel_reading("A", "X")
+        assert ax_channel_data[0][0] == 10000
+        assert ax_channel_data[0][-1] == 1990000
+        assert ax_channel_data[1][0] == 22
+        assert ax_channel_data[1][-1] == 1
+        cz_channel_data = wf.get_raw_channel_reading("C", "Z")
+        assert cz_channel_data[0][0] == 10000
+        assert cz_channel_data[0][-1] == 1990000
+        assert cz_channel_data[1][0] == 22
+        assert cz_channel_data[1][-1] == 1
 
-#         wf.get_h5_file().close()  # safe clean-up when running CI on windows systems
+        wf.get_h5_file().close()  # safe clean-up when running CI on windows systems
