@@ -2,7 +2,9 @@
 import os
 import tempfile
 
+from mantarray_file_manager import BaseWellFile
 from mantarray_file_manager import Beta1WellFile
+from mantarray_file_manager import H5Wrapper
 from mantarray_file_manager import migrate_to_latest_version
 from mantarray_file_manager import WellFile
 from mantarray_file_manager.file_writer import h5_file_trimmer
@@ -53,9 +55,8 @@ def fixture_trimmed_file_path():
         yield trimmed_file_path
 
 
-@pytest.fixture(scope="function", name="generic_well_file")
-def fixture_generic_well_file():
-    # TODO rename this
+@pytest.fixture(scope="function", name="generic_beta_1_well_file")
+def fixture_generic_beta_1_well_file():
     wf = Beta1WellFile(
         os.path.join(
             PATH_OF_CURRENT_FILE,
@@ -66,13 +67,25 @@ def fixture_generic_well_file():
     yield wf
 
 
-@pytest.fixture(scope="function", name="generic_well_file_0_3_1")
+@pytest.fixture(scope="function", name="generic_beta_1_well_file_0_3_1")
 def fixture_generic_well_file_0_3_1():
     wf = Beta1WellFile(PATH_TO_GENERIC_0_3_1_FILE)
     yield wf
 
 
-@pytest.fixture(scope="function", name="generic_well_file_0_3_1__2")
+@pytest.fixture(scope="function", name="generic_h5_wrapper")
+def fixture_generic_h5_wrapper():
+    wrapper = H5Wrapper(PATH_TO_GENERIC_1_0_0_FILE)
+    yield wrapper
+
+
+@pytest.fixture(scope="function", name="generic_base_well_file")
+def fixture_generic_base_well_file():
+    bwf = BaseWellFile(PATH_TO_GENERIC_1_0_0_FILE)
+    yield bwf
+
+
+@pytest.fixture(scope="function", name="generic_beta_1_well_file_0_3_1__2")
 def fixture_generic_well_file_0_3_1__2():
     wf = Beta1WellFile(
         os.path.join(
@@ -95,7 +108,7 @@ def fixture_current_beta2_version_file_path():
     yield PATH_TO_GENERIC_1_0_0_FILE
 
 
-@pytest.fixture(scope="function", name="generic_well_file_1_0_0")
+@pytest.fixture(scope="function", name="generic_beta_1_well_file_1_0_0")
 def fixture_generic_well_file_1_0_0():
     wf = WellFile(PATH_TO_GENERIC_1_0_0_FILE)
     yield wf
