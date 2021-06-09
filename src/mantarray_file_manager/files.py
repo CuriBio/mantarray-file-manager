@@ -300,7 +300,7 @@ class LikelyConsistentMetadata(
 
 class BaseWellFile(
     H5Wrapper, LikelyConsistentMetadata
-):  # pylint: disable=too-many-ancestors # Eli (7/28/20): I don't see a way around this...we need to subclass h5py File
+):  # pylint: disable=too-many-ancestors # Tanner (6/9/21): consider refactoring the metadata mixins
     """Wrapper around an H5 file for a single well of data.
 
     abstract class containing the most generic functionality of Well Files.
@@ -365,7 +365,9 @@ class BaseWellFile(
         )
 
 
-class Beta1WellFile(BaseWellFile):
+class Beta1WellFile(
+    BaseWellFile
+):  # pylint: disable=too-many-ancestors # Tanner (6/9/21): consider refactoring the metadata mixins
     """Wrapper around H5 file of latest Beta 1 version.
 
     This is only guaranteed to function correctly on the latest Beta 1
@@ -449,7 +451,9 @@ class Beta1WellFile(BaseWellFile):
         return new_time_delta
 
 
-class WellFile(BaseWellFile):
+class WellFile(
+    BaseWellFile
+):  # pylint: disable=too-many-ancestors # Tanner (6/9/21): consider refactoring the metadata mixins
     """Wrapper around H5 file of latest file format version.
 
     This is only guaranteed to function correctly on the latest file
@@ -513,9 +517,8 @@ class WellFile(BaseWellFile):
             if sensor_name == sensor:
                 return idx + axes.index(axis)
             idx += len(axes)
-        else:
-            # this branch means the sensor wasn't found, but should be covered by try/except in get_raw_channel_reading
-            raise NotImplementedError("Sensor not found in data. This should be covered by prior checks")
+        # reaching this point this means the sensor wasn't found, but should be covered by try/except in get_raw_channel_reading
+        raise NotImplementedError("Sensor not found in data. This should be covered by prior checks")
 
 
 def find_start_index(from_start: int, old_data: NDArray[(1, Any), int]) -> int:

@@ -278,6 +278,9 @@ def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values__with_r
 
             channel_idx += 1
 
+    # make sure at least one channel was tested
+    assert channel_idx > 0
+
 
 def test_WellFile_beta_2__get_raw_channel_raises_error_if_sensor_not_present_in_file(
     generic_beta_1_well_file_1_0_0,

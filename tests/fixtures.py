@@ -161,7 +161,5 @@ def fixture_well_file_1_0_0_with_random_config():
         h5_file.create_dataset(TIME_OFFSETS, data=np.ones((num_sensors, data_len), dtype=np.uint16))
         h5_file.create_dataset(TISSUE_SENSOR_READINGS, data=tissue_data)
 
-        h5_file.close()
-
         wf = WellFile(file_path)
         yield wf
