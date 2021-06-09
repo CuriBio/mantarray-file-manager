@@ -31,6 +31,7 @@ from .fixtures import fixture_generic_well_file_0_3_1
 from .fixtures import fixture_generic_well_file_0_3_1__2
 from .fixtures import fixture_generic_well_file_1_0_0
 from .fixtures import fixture_trimmed_file_path
+from .fixtures import fixture_well_file_1_0_0_with_random_config
 
 __fixtures__ = (
     fixture_generic_beta_1_well_file,
@@ -40,6 +41,7 @@ __fixtures__ = (
     fixture_generic_well_file_1_0_0,
     fixture_generic_h5_wrapper,
     fixture_generic_base_well_file,
+    fixture_well_file_1_0_0_with_random_config,
 )
 PATH_OF_CURRENT_FILE = get_current_file_abs_directory()
 
@@ -251,25 +253,30 @@ def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values(
     assert arr[1, 0] == 0
     assert arr[1, 100] == 0
 
-    assert (
-        arr[0, 1] - arr[0, 0]
-        == generic_beta_1_well_file_1_0_0.get_tissue_sampling_period_microseconds()
-    )
+    assert arr[0, 1] - arr[0, 0] == generic_beta_1_well_file_1_0_0.get_tissue_sampling_period_microseconds()
 
 
-# TODO
-# def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values__with_random_magnetometer_configuration(
-#     well_file_1_0_0_with_random_config,
-# ):
-#     arr = generic_beta_1_well_file_1_0_0.get_raw_channel_reading("C", "Z")
-#     assert arr.shape == (2, 201)
-#     assert arr.dtype == np.int64
-#     assert arr[1, 0] == 0
-#     assert arr[1, 100] == 0
+def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values__with_random_magnetometer_configuration(
+    well_file_1_0_0_with_random_config,
+):
+    channel_idx = 0
+    for sensor, axis_list in well_file_1_0_0_with_random_config.get_magnetometer_config().items():
+        for axis in axis_list:
+            arr = well_file_1_0_0_with_random_config.get_raw_channel_reading(sensor, axis)
+            assert arr.shape == (2, 100), f"Incorrect shape for Sensor {sensor} Axis {axis}"
+            assert arr.dtype == np.int64, f"Incorrect dtype for Sensor {sensor} Axis {axis}"
+            assert arr[0, 0] == 0, f"Incorrect first time index for Sensor {sensor} Axis {axis}"
+            assert arr[1, 0] == channel_idx * 100, f"Incorrect first value for Sensor {sensor} Axis {axis}"
+            assert (
+                arr[1, 99] == channel_idx * 100 + 99
+            ), f"Incorrect last value for Sensor {sensor} Axis {axis}"
 
-#     assert (
-#         arr[0, 1] - arr[0, 0] == generic_beta_1_well_file_1_0_0.get_tissue_sampling_period_microseconds()
-#     )
+            assert (
+                arr[0, 1] - arr[0, 0]
+                == well_file_1_0_0_with_random_config.get_tissue_sampling_period_microseconds()
+            ), f"Incorrect sampling period for Sensor {sensor} Axis {axis}"
+
+            channel_idx += 1
 
 
 def test_WellFile_beta_2__get_raw_channel_raises_error_if_sensor_not_present_in_file(

@@ -323,19 +323,13 @@ class BaseWellFile(
         )
 
     def get_begin_recording(self) -> datetime.datetime:
-        return _extract_datetime_from_h5(
-            self._h5_file, self._file_version, UTC_BEGINNING_RECORDING_UUID
-        )
+        return _extract_datetime_from_h5(self._h5_file, self._file_version, UTC_BEGINNING_RECORDING_UUID)
 
     def get_timestamp_of_first_tissue_data_point(self) -> datetime.datetime:
-        return _extract_datetime_from_h5(
-            self._h5_file, self._file_version, UTC_FIRST_TISSUE_DATA_POINT_UUID
-        )
+        return _extract_datetime_from_h5(self._h5_file, self._file_version, UTC_FIRST_TISSUE_DATA_POINT_UUID)
 
     def get_timestamp_of_first_ref_data_point(self) -> datetime.datetime:
-        return _extract_datetime_from_h5(
-            self._h5_file, self._file_version, UTC_FIRST_REF_DATA_POINT_UUID
-        )
+        return _extract_datetime_from_h5(self._h5_file, self._file_version, UTC_FIRST_REF_DATA_POINT_UUID)
 
     def get_tissue_sampling_period_microseconds(self) -> int:
         return int(
@@ -411,12 +405,9 @@ class Beta1WellFile(BaseWellFile):
     def _load_reading(self, reading_type: str) -> NDArray[(2, Any), int]:
         if reading_type not in (TISSUE_SENSOR_READINGS, REFERENCE_SENSOR_READINGS):
             raise NotImplementedError(reading_type)
-        recording_start_index_useconds = (
-            self.get_recording_start_index() * MICROSECONDS_PER_CENTIMILLISECOND
-        )
-        timestamp_of_start_index = (
-            self.get_timestamp_of_beginning_of_data_acquisition()
-            + datetime.timedelta(microseconds=recording_start_index_useconds)
+        recording_start_index_useconds = self.get_recording_start_index() * MICROSECONDS_PER_CENTIMILLISECOND
+        timestamp_of_start_index = self.get_timestamp_of_beginning_of_data_acquisition() + datetime.timedelta(
+            microseconds=recording_start_index_useconds
         )
         initial_timestamp = (
             self.get_timestamp_of_first_tissue_data_point()
@@ -438,9 +429,7 @@ class Beta1WellFile(BaseWellFile):
         data = self._h5_file[reading_type]
         num_data_points = len(data)
         times = np.arange(0, num_data_points * time_step, time_step)
-        time_delta_centimilliseconds = self._check_for_trimmed_file(
-            times, time_delta_centimilliseconds
-        )
+        time_delta_centimilliseconds = self._check_for_trimmed_file(times, time_delta_centimilliseconds)
         return np.array((times + time_delta_centimilliseconds, data), dtype=np.int32)
 
     def _check_for_trimmed_file(
@@ -484,7 +473,10 @@ class WellFile(BaseWellFile):
             sensor: {axis: None for axis in axes} for sensor, axes in self._sensor_axis_dict.items()
         }
 
-    def get_time_indices(self) -> NDArray[(1, Any), int]:
+    def get_magnetometer_config(self) -> Dict[str, List[str]]:
+        return self._sensor_axis_dict
+
+    def get_raw_time_indices(self) -> NDArray[(1, Any), int]:
         return self._h5_file[TIME_INDICES]
 
     def get_raw_channel_reading(self, sensor: str, axis: str) -> NDArray[(2, Any), int]:
@@ -496,7 +488,7 @@ class WellFile(BaseWellFile):
             if self._sensor_time_indices[sensor] is None:
                 sensor_time_offset_idx = list(self._sensor_axis_dict.keys()).index(sensor)
                 self._sensor_time_indices[sensor] = (
-                    self.get_time_indices() - self._h5_file[TIME_OFFSETS][sensor_time_offset_idx, :]
+                    self.get_raw_time_indices() - self._h5_file[TIME_OFFSETS][sensor_time_offset_idx, :]
                 )
         except KeyError as e:
             raise SensorDataNotInFileError(sensor) from e
@@ -523,9 +515,7 @@ class WellFile(BaseWellFile):
             idx += len(axes)
         else:
             # this branch means the sensor wasn't found, but should be covered by try/except in get_raw_channel_reading
-            raise NotImplementedError(
-                "Sensor not found in data. This should be covered by prior checks"
-            )
+            raise NotImplementedError("Sensor not found in data. This should be covered by prior checks")
 
 
 def find_start_index(from_start: int, old_data: NDArray[(1, Any), int]) -> int:

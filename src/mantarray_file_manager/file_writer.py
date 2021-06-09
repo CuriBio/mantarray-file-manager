@@ -56,7 +56,7 @@ class MantarrayH5FileCreator(
     def __init__(
         self,
         file_name: str,
-        file_format_version: str = CURRENT_BETA1_HDF5_FILE_FORMAT_VERSION,
+        file_format_version: str = CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION,
     ) -> None:
         super().__init__(
             file_name,
@@ -75,9 +75,7 @@ def _get_format_version_of_file(file_path: str) -> str:
     return file_version
 
 
-def migrate_to_next_version(
-    starting_file_path: str, working_directory: Optional[str] = None
-) -> str:
+def migrate_to_next_version(starting_file_path: str, working_directory: Optional[str] = None) -> str:
     """Migrates an H5 file to the next version along the migration path.
 
     Args:
@@ -99,9 +97,7 @@ def migrate_to_next_version(
     old_file_basename = ntpath.basename(starting_file_path)
     old_file_basename_no_suffix = old_file_basename[:-3]
 
-    new_file_name = os.path.join(
-        working_directory, f"{old_file_basename_no_suffix}__v{new_file_version}.h5"
-    )
+    new_file_name = os.path.join(working_directory, f"{old_file_basename_no_suffix}__v{new_file_version}.h5")
     new_file = MantarrayH5FileCreator(new_file_name, file_format_version=new_file_version)
 
     # old metadata
@@ -148,9 +144,7 @@ def migrate_to_next_version(
     return new_file_name
 
 
-def migrate_to_latest_version(
-    starting_file_path: str, working_directory: Optional[str] = None
-) -> str:
+def migrate_to_latest_version(starting_file_path: str, working_directory: Optional[str] = None) -> str:
     """Migrates an H5 file to the latest version.
 
     To use from the command line: `python -c "from mantarray_file_manager import migrate_to_latest_version; migrate_to_latest_version('tests/h5/v0.3.1/MA20123456__2020_08_17_145752__A1.h5')"`
@@ -168,9 +162,7 @@ def migrate_to_latest_version(
         file_version = _get_format_version_of_file(current_file_path)
         if file_version == CURRENT_BETA1_HDF5_FILE_FORMAT_VERSION:
             return current_file_path
-        current_file_path = migrate_to_next_version(
-            current_file_path, working_directory=working_directory
-        )
+        current_file_path = migrate_to_next_version(current_file_path, working_directory=working_directory)
 
 
 def h5_file_trimmer(
@@ -212,7 +204,7 @@ def h5_file_trimmer(
 
     # finding amount to trim
     old_time_indices = (
-        old_file.get_time_indices()
+        old_file.get_raw_time_indices()
         if isinstance(old_file, WellFile)
         else old_file.get_raw_tissue_reading()[0]
     )
@@ -229,9 +221,7 @@ def h5_file_trimmer(
         )
     actual_end_trimmed = tissue_data_last_val - old_time_indices[tissue_data_last_index]
     if actual_end_trimmed != from_end:
-        _print(
-            f"{actual_end_trimmed} centimilliseconds were trimmed from the end instead of {from_end}"
-        )
+        _print(f"{actual_end_trimmed} centimilliseconds were trimmed from the end instead of {from_end}")
 
     is_file_too_trimmed = tissue_data_start_index >= tissue_data_last_index
     if isinstance(old_file, Beta1WellFile):
@@ -267,7 +257,7 @@ def h5_file_trimmer(
         working_directory,
         f"{old_file_basename}__trimmed_{actual_start_trimmed + old_from_start}_{actual_end_trimmed + old_from_end}.h5",
     )
-    new_file = MantarrayH5FileCreator(new_file_name)
+    new_file = MantarrayH5FileCreator(new_file_name, file_format_version=file_version)
     # add old metadata
     for iter_metadata_key in old_metadata_keys:
         new_file.attrs[iter_metadata_key] = old_h5_file.attrs[iter_metadata_key]
