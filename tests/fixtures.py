@@ -124,8 +124,8 @@ def fixture_generic_well_file_1_0_0():
     yield wf
 
 
-@pytest.fixture(scope="function", name="well_file_1_0_0_with_random_config")
-def fixture_well_file_1_0_0_with_random_config():
+@pytest.fixture(scope="function", name="h5_file_1_0_0_with_random_config")
+def fixture_h5_file_1_0_0_with_random_config():
     # Tanner (6/9/21): Only metadata values needed for get_raw_channel_reading and get_tissue_sampling_period_microseconds are present in this file
     with tempfile.TemporaryDirectory() as tmp_dir:
         file_path = os.path.join(tmp_dir, "random_file")
@@ -160,6 +160,6 @@ def fixture_well_file_1_0_0_with_random_config():
         )
         h5_file.create_dataset(TIME_OFFSETS, data=np.ones((num_sensors, data_len), dtype=np.uint16))
         h5_file.create_dataset(TISSUE_SENSOR_READINGS, data=tissue_data)
+        h5_file.close()
 
-        wf = WellFile(file_path)
-        yield wf
+        yield file_path

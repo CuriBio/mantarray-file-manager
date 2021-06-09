@@ -19,6 +19,7 @@ from mantarray_file_manager import PlateRecording
 from mantarray_file_manager import SensorDataNotInFileError
 from mantarray_file_manager import UnsupportedMantarrayFileVersionError
 from mantarray_file_manager import USER_ACCOUNT_ID_UUID
+from mantarray_file_manager import WellFile
 from mantarray_file_manager import WellRecordingsNotFromSameSessionError
 import numpy as np
 import pytest
@@ -30,8 +31,8 @@ from .fixtures import fixture_generic_h5_wrapper
 from .fixtures import fixture_generic_well_file_0_3_1
 from .fixtures import fixture_generic_well_file_0_3_1__2
 from .fixtures import fixture_generic_well_file_1_0_0
+from .fixtures import fixture_h5_file_1_0_0_with_random_config
 from .fixtures import fixture_trimmed_file_path
-from .fixtures import fixture_well_file_1_0_0_with_random_config
 
 __fixtures__ = (
     fixture_generic_beta_1_well_file,
@@ -41,7 +42,7 @@ __fixtures__ = (
     fixture_generic_well_file_1_0_0,
     fixture_generic_h5_wrapper,
     fixture_generic_base_well_file,
-    fixture_well_file_1_0_0_with_random_config,
+    fixture_h5_file_1_0_0_with_random_config,
 )
 PATH_OF_CURRENT_FILE = get_current_file_abs_directory()
 
@@ -257,12 +258,14 @@ def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values(
 
 
 def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values__with_random_magnetometer_configuration(
-    well_file_1_0_0_with_random_config,
+    h5_file_1_0_0_with_random_config,
 ):
+    wf = WellFile(h5_file_1_0_0_with_random_config)
+
     channel_idx = 0
-    for sensor, axis_list in well_file_1_0_0_with_random_config.get_magnetometer_config().items():
+    for sensor, axis_list in wf.get_magnetometer_config().items():
         for axis in axis_list:
-            arr = well_file_1_0_0_with_random_config.get_raw_channel_reading(sensor, axis)
+            arr = wf.get_raw_channel_reading(sensor, axis)
             assert arr.shape == (2, 100), f"Incorrect shape for Sensor {sensor} Axis {axis}"
             assert arr.dtype == np.int64, f"Incorrect dtype for Sensor {sensor} Axis {axis}"
             assert arr[0, 0] == 0, f"Incorrect first time index for Sensor {sensor} Axis {axis}"
@@ -272,8 +275,7 @@ def test_WellFile_beta_2__get_raw_channel_reading_returns_correct_values__with_r
             ), f"Incorrect last value for Sensor {sensor} Axis {axis}"
 
             assert (
-                arr[0, 1] - arr[0, 0]
-                == well_file_1_0_0_with_random_config.get_tissue_sampling_period_microseconds()
+                arr[0, 1] - arr[0, 0] == wf.get_tissue_sampling_period_microseconds()
             ), f"Incorrect sampling period for Sensor {sensor} Axis {axis}"
 
             channel_idx += 1
