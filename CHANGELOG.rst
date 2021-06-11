@@ -2,6 +2,14 @@ Changelog for Mantarray File Manager
 ====================================
 
 
+1.0.0 (unreleased)
+------------------
+
+- Updated Beta 2 file version (still version 1.0.0).
+- Refactored Well File class hierarchy.
+- Update Beta 2 Well File methods.
+
+
 0.5.1 (2021-05-17)
 ------------------
 

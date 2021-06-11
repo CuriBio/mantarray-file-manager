@@ -39,6 +39,8 @@ from mantarray_file_manager import SOFTWARE_BUILD_NUMBER_UUID
 from mantarray_file_manager import SOFTWARE_RELEASE_VERSION_UUID
 from mantarray_file_manager import START_RECORDING_TIME_INDEX_UUID
 from mantarray_file_manager import TAMPER_FLAG_UUID
+from mantarray_file_manager import TIME_INDICES
+from mantarray_file_manager import TIME_OFFSETS
 from mantarray_file_manager import TISSUE_SAMPLING_PERIOD_UUID
 from mantarray_file_manager import TISSUE_SENSOR_READINGS
 from mantarray_file_manager import TOTAL_WELL_COUNT_UUID
@@ -110,14 +112,10 @@ def test_metadata_UUIDs():
     assert COMPUTER_NAME_HASH_UUID == uuid.UUID("fefd0675-35c2-45f6-855a-9500ad3f100d")
     assert BARCODE_IS_FROM_SCANNER_UUID == uuid.UUID("7d026e86-da70-4464-9181-dc0ce2d47bd1")
     assert IS_FILE_ORIGINAL_UNTRIMMED_UUID == uuid.UUID("52231a24-97a3-497a-917c-86c780d9993f")
-    assert TRIMMED_TIME_FROM_ORIGINAL_START_UUID == uuid.UUID(
-        "371996e6-5e2d-4183-a5cf-06de7058210a"
-    )
+    assert TRIMMED_TIME_FROM_ORIGINAL_START_UUID == uuid.UUID("371996e6-5e2d-4183-a5cf-06de7058210a")
     assert TRIMMED_TIME_FROM_ORIGINAL_END_UUID == uuid.UUID("55f6770d-c369-42ce-a437-5ed89c3cb1f8")
     assert ORIGINAL_FILE_VERSION_UUID == uuid.UUID("cd1b4063-4a87-4a57-bc12-923ff4890844")
-    assert UTC_TIMESTAMP_OF_FILE_VERSION_MIGRATION_UUID == uuid.UUID(
-        "399b2148-09d4-418b-a132-e37df2721938"
-    )
+    assert UTC_TIMESTAMP_OF_FILE_VERSION_MIGRATION_UUID == uuid.UUID("399b2148-09d4-418b-a132-e37df2721938")
     assert FILE_VERSION_PRIOR_TO_MIGRATION_UUID == uuid.UUID("11b4945b-3cf3-4f67-8bee-7abc3c449756")
     assert BOOTUP_COUNTER_UUID == uuid.UUID("b9ccc724-a39d-429a-be6d-3fd29be5037d")
     assert TOTAL_WORKING_HOURS_UUID == uuid.UUID("f8108718-2fa0-40ce-a51a-8478e5edd4b8")
@@ -157,8 +155,8 @@ def test_metadata_UUIDs():
         COMPUTER_NAME_HASH_UUID: "SHA512 digest of computer name",
         BARCODE_IS_FROM_SCANNER_UUID: "Is this barcode obtained from the scanner",
         IS_FILE_ORIGINAL_UNTRIMMED_UUID: "Is this an original file straight from the instrument and untrimmed",
-        TRIMMED_TIME_FROM_ORIGINAL_START_UUID: "Number of centimilliseconds that has been trimmed off the beginning of when the original data started",
-        TRIMMED_TIME_FROM_ORIGINAL_END_UUID: "Number of centimilliseconds that has been trimmed off the end of when the original data ended",
+        TRIMMED_TIME_FROM_ORIGINAL_START_UUID: "Number of centimilliseconds if Beta 1 data or microseconds o/w that has been trimmed off the beginning of when the original data started",
+        TRIMMED_TIME_FROM_ORIGINAL_END_UUID: "Number of centimilliseconds if Beta 1 data or microseconds o/w that has been trimmed off the end of when the original data ended",
         ORIGINAL_FILE_VERSION_UUID: "The original version of the file when recorded, prior to any migrations to newer versions/formats.",
         UTC_TIMESTAMP_OF_FILE_VERSION_MIGRATION_UUID: "Timestamp when this file was migrated from an earlier version.",
         FILE_VERSION_PRIOR_TO_MIGRATION_UUID: "File format version that this file was migrated from",
@@ -166,7 +164,7 @@ def test_metadata_UUIDs():
         TOTAL_WORKING_HOURS_UUID: "The total number of hours this Mantarray Instrument has been powered on and running",
         TAMPER_FLAG_UUID: "Is it suspected the internals of the Mantarray enclosure have been tampered with",
         PCB_SERIAL_NUMBER_UUID: "The serial number of the Mantarray PCB",
-        MAGNETOMETER_CONFIGURATION_UUID: "The state (on/off) of the board's magnetometers",
+        MAGNETOMETER_CONFIGURATION_UUID: "The board's magnetometer channels that were enabled during this recording",
     }
 
 
@@ -177,3 +175,5 @@ def test_file_migration_paths():
 def test_sensor_data_types():
     assert TISSUE_SENSOR_READINGS == "tissue_sensor_readings"
     assert REFERENCE_SENSOR_READINGS == "reference_sensor_readings"
+    assert TIME_INDICES == "time_indices"
+    assert TIME_OFFSETS == "time_offsets"
