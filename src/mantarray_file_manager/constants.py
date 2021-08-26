@@ -96,8 +96,8 @@ METADATA_UUID_DESCRIPTIONS = immutabledict(
         COMPUTER_NAME_HASH_UUID: "SHA512 digest of computer name",
         BARCODE_IS_FROM_SCANNER_UUID: "Is this barcode obtained from the scanner",
         IS_FILE_ORIGINAL_UNTRIMMED_UUID: "Is this an original file straight from the instrument and untrimmed",
-        TRIMMED_TIME_FROM_ORIGINAL_START_UUID: "Number of centimilliseconds that has been trimmed off the beginning of when the original data started",
-        TRIMMED_TIME_FROM_ORIGINAL_END_UUID: "Number of centimilliseconds that has been trimmed off the end of when the original data ended",
+        TRIMMED_TIME_FROM_ORIGINAL_START_UUID: "Number of centimilliseconds if Beta 1 data or microseconds o/w that has been trimmed off the beginning of when the original data started",
+        TRIMMED_TIME_FROM_ORIGINAL_END_UUID: "Number of centimilliseconds if Beta 1 data or microseconds o/w that has been trimmed off the end of when the original data ended",
         ORIGINAL_FILE_VERSION_UUID: "The original version of the file when recorded, prior to any migrations to newer versions/formats.",
         UTC_TIMESTAMP_OF_FILE_VERSION_MIGRATION_UUID: "Timestamp when this file was migrated from an earlier version.",
         FILE_VERSION_PRIOR_TO_MIGRATION_UUID: "File format version that this file was migrated from",
@@ -108,7 +108,7 @@ METADATA_UUID_DESCRIPTIONS = immutabledict(
         TOTAL_WORKING_HOURS_UUID: "The total number of hours this Mantarray Instrument has been powered on and running",
         TAMPER_FLAG_UUID: "Is it suspected the internals of the Mantarray enclosure have been tampered with",
         PCB_SERIAL_NUMBER_UUID: "The serial number of the Mantarray PCB",
-        MAGNETOMETER_CONFIGURATION_UUID: "The state (on/off) of the board's magnetometers",
+        MAGNETOMETER_CONFIGURATION_UUID: "The board's magnetometer channels that were enabled during this recording",
     }
 )
 
@@ -117,3 +117,5 @@ CENTIMILLISECONDS_PER_SECOND = 1e5
 MICROSECONDS_PER_CENTIMILLISECOND = 10
 TISSUE_SENSOR_READINGS = "tissue_sensor_readings"
 REFERENCE_SENSOR_READINGS = "reference_sensor_readings"
+TIME_INDICES = "time_indices"
+TIME_OFFSETS = "time_offsets"

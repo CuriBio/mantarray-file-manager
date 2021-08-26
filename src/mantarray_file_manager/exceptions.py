@@ -13,11 +13,11 @@ from .constants import METADATA_UUID_DESCRIPTIONS
 from .constants import MIN_SUPPORTED_FILE_VERSION
 
 if TYPE_CHECKING:
-    from .files import WellFile
+    from .files import BaseWellFile
 
 
 class WellRecordingsNotFromSameSessionError(Exception):
-    def __init__(self, main_well_file: "WellFile", new_well_file: "WellFile"):
+    def __init__(self, main_well_file: "BaseWellFile", new_well_file: "BaseWellFile"):
         super().__init__(
             f"Previously loaded files for this Plate Recording session were from barcode '{main_well_file.get_plate_barcode()}' taken at {main_well_file.get_begin_recording()}. A new file is attempting to be added that is from barcode '{new_well_file.get_plate_barcode()}' taken at {new_well_file.get_begin_recording()}"
         )
@@ -79,9 +79,7 @@ class MantarrayFileNotLatestVersionError(Exception):
     """Error raised when a function requiring the latest file format for a specific instrument version is given an old file format."""
 
     def __init__(self, file_version: str):
-        is_beta_1_file = file_version.split(".") < VersionInfo.parse(
-            CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION
-        )
+        is_beta_1_file = file_version.split(".") < VersionInfo.parse(CURRENT_BETA2_HDF5_FILE_FORMAT_VERSION)
         latest_file_version = (
             CURRENT_BETA1_HDF5_FILE_FORMAT_VERSION
             if is_beta_1_file
@@ -91,3 +89,13 @@ class MantarrayFileNotLatestVersionError(Exception):
         super().__init__(
             f"Mantarray {file_type} files of version {file_version} are not supported. Please migrate to the latest file version for Mantarray {file_type} data: {latest_file_version}"
         )
+
+
+class SensorDataNotInFileError(Exception):
+    def __init__(self, sensor: str) -> None:
+        super().__init__(f"Sensor {sensor} data was not recorded to this file")
+
+
+class AxisDataForSensorNotInFileError(Exception):
+    def __init__(self, sensor: str, axis: str) -> None:
+        super().__init__(f"{axis} Axis data for Sensor {sensor} was not recorded to this file")
