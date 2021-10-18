@@ -41,6 +41,8 @@ from .constants import SLEEP_FIRMWARE_VERSION_UUID
 from .constants import SOFTWARE_BUILD_NUMBER_UUID
 from .constants import SOFTWARE_RELEASE_VERSION_UUID
 from .constants import START_RECORDING_TIME_INDEX_UUID
+from .constants import STIMULATION_PROTOCOL_UUID
+from .constants import STIMULATION_READINGS
 from .constants import TAMPER_FLAG_UUID
 from .constants import TIME_INDICES
 from .constants import TIME_OFFSETS
@@ -152,4 +154,6 @@ __all__ = [
     "H5Wrapper",
     "SensorDataNotInFileError",
     "AxisDataForSensorNotInFileError",
+    "STIMULATION_PROTOCOL_UUID",
+    "STIMULATION_READINGS",
 ]

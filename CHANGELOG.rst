@@ -2,10 +2,16 @@ Changelog for Mantarray File Manager
 ====================================
 
 
+1.0.1 (unreleased)
+------------------
+
+- Added UUID for stimulation protocols and name for stimulation data.
+
+
 1.0.0 (2021-08-26)
 ------------------
 
-- Updated Beta 2 file version (still version 1.0.0).
+- Updated Beta 2 file format (still version 1.0.0).
 - Refactored ``WellFile`` class hierarchy. Beta 1 files should now use ``Beta1WellFile`` as ``WellFile``
   is for Beta 2 files now.
 - Updated Beta 2 ``WellFile`` methods.
