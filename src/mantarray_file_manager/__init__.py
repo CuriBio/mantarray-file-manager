@@ -55,6 +55,7 @@ from .constants import TRIMMED_TIME_FROM_ORIGINAL_START_UUID
 from .constants import USER_ACCOUNT_ID_UUID
 from .constants import UTC_BEGINNING_DATA_ACQUISTION_UUID
 from .constants import UTC_BEGINNING_RECORDING_UUID
+from .constants import UTC_BEGINNING_STIMULATION_UUID
 from .constants import UTC_FIRST_REF_DATA_POINT_UUID
 from .constants import UTC_FIRST_TISSUE_DATA_POINT_UUID
 from .constants import UTC_TIMESTAMP_OF_FILE_VERSION_MIGRATION_UUID
@@ -156,4 +157,5 @@ __all__ = [
     "AxisDataForSensorNotInFileError",
     "STIMULATION_PROTOCOL_UUID",
     "STIMULATION_READINGS",
+    "UTC_BEGINNING_STIMULATION_UUID",
 ]
