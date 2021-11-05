@@ -2,11 +2,11 @@ Changelog for Mantarray File Manager
 ====================================
 
 
-1.0.1 (unreleased)
+1.0.1 (2021-11-05)
 ------------------
 
 - Added UUID for stimulation protocols, UUID for UTC timestamp of when stimulation began,
-  and name for stimulation dataset in H5 files.
+  and name for stimulation dataset in H5 files (file format still version 1.0.0).
 
 
 1.0.0 (2021-08-26)
