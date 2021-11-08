@@ -38,6 +38,8 @@ from mantarray_file_manager import SLEEP_FIRMWARE_VERSION_UUID
 from mantarray_file_manager import SOFTWARE_BUILD_NUMBER_UUID
 from mantarray_file_manager import SOFTWARE_RELEASE_VERSION_UUID
 from mantarray_file_manager import START_RECORDING_TIME_INDEX_UUID
+from mantarray_file_manager import STIMULATION_PROTOCOL_UUID
+from mantarray_file_manager import STIMULATION_READINGS
 from mantarray_file_manager import TAMPER_FLAG_UUID
 from mantarray_file_manager import TIME_INDICES
 from mantarray_file_manager import TIME_OFFSETS
@@ -50,6 +52,7 @@ from mantarray_file_manager import TRIMMED_TIME_FROM_ORIGINAL_START_UUID
 from mantarray_file_manager import USER_ACCOUNT_ID_UUID
 from mantarray_file_manager import UTC_BEGINNING_DATA_ACQUISTION_UUID
 from mantarray_file_manager import UTC_BEGINNING_RECORDING_UUID
+from mantarray_file_manager import UTC_BEGINNING_STIMULATION_UUID
 from mantarray_file_manager import UTC_FIRST_REF_DATA_POINT_UUID
 from mantarray_file_manager import UTC_FIRST_TISSUE_DATA_POINT_UUID
 from mantarray_file_manager import UTC_TIMESTAMP_OF_FILE_VERSION_MIGRATION_UUID
@@ -122,6 +125,8 @@ def test_metadata_UUIDs():
     assert TAMPER_FLAG_UUID == uuid.UUID("68d0147f-9a84-4423-9c50-228da16ba895")
     assert PCB_SERIAL_NUMBER_UUID == uuid.UUID("5103f995-19d2-4880-8a2e-2ce9080cd2f5")
     assert MAGNETOMETER_CONFIGURATION_UUID == uuid.UUID("921121e9-4191-4536-bedd-03186fa1e117")
+    assert UTC_BEGINNING_STIMULATION_UUID == uuid.UUID("4b310594-ded4-45fd-a1b4-b829aceb416c")
+    assert STIMULATION_PROTOCOL_UUID == uuid.UUID("ede638ce-544e-427a-b1d9-c40784d7c82d")
 
     assert METADATA_UUID_DESCRIPTIONS == {
         HARDWARE_TEST_RECORDING_UUID: "Is Hardware Test Recording",
@@ -165,6 +170,8 @@ def test_metadata_UUIDs():
         TAMPER_FLAG_UUID: "Is it suspected the internals of the Mantarray enclosure have been tampered with",
         PCB_SERIAL_NUMBER_UUID: "The serial number of the Mantarray PCB",
         MAGNETOMETER_CONFIGURATION_UUID: "The board's magnetometer channels that were enabled during this recording",
+        UTC_BEGINNING_STIMULATION_UUID: "UTC Timestamp of Beginning of Stimulation",
+        STIMULATION_PROTOCOL_UUID: "The stimulation protocol that was running on this well during recording. Empty string if stimulation was not active",
     }
 
 
@@ -175,5 +182,6 @@ def test_file_migration_paths():
 def test_sensor_data_types():
     assert TISSUE_SENSOR_READINGS == "tissue_sensor_readings"
     assert REFERENCE_SENSOR_READINGS == "reference_sensor_readings"
+    assert STIMULATION_READINGS == "stimulation_readings"
     assert TIME_INDICES == "time_indices"
     assert TIME_OFFSETS == "time_offsets"

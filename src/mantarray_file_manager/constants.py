@@ -63,6 +63,8 @@ TOTAL_WORKING_HOURS_UUID = uuid.UUID("f8108718-2fa0-40ce-a51a-8478e5edd4b8")
 TAMPER_FLAG_UUID = uuid.UUID("68d0147f-9a84-4423-9c50-228da16ba895")
 PCB_SERIAL_NUMBER_UUID = uuid.UUID("5103f995-19d2-4880-8a2e-2ce9080cd2f5")
 MAGNETOMETER_CONFIGURATION_UUID = uuid.UUID("921121e9-4191-4536-bedd-03186fa1e117")
+UTC_BEGINNING_STIMULATION_UUID = uuid.UUID("4b310594-ded4-45fd-a1b4-b829aceb416c")
+STIMULATION_PROTOCOL_UUID = uuid.UUID("ede638ce-544e-427a-b1d9-c40784d7c82d")
 METADATA_UUID_DESCRIPTIONS = immutabledict(
     {
         # General values
@@ -109,6 +111,8 @@ METADATA_UUID_DESCRIPTIONS = immutabledict(
         TAMPER_FLAG_UUID: "Is it suspected the internals of the Mantarray enclosure have been tampered with",
         PCB_SERIAL_NUMBER_UUID: "The serial number of the Mantarray PCB",
         MAGNETOMETER_CONFIGURATION_UUID: "The board's magnetometer channels that were enabled during this recording",
+        UTC_BEGINNING_STIMULATION_UUID: "UTC Timestamp of Beginning of Stimulation",
+        STIMULATION_PROTOCOL_UUID: "The stimulation protocol that was running on this well during recording. Empty string if stimulation was not active",
     }
 )
 
@@ -117,5 +121,6 @@ CENTIMILLISECONDS_PER_SECOND = 1e5
 MICROSECONDS_PER_CENTIMILLISECOND = 10
 TISSUE_SENSOR_READINGS = "tissue_sensor_readings"
 REFERENCE_SENSOR_READINGS = "reference_sensor_readings"
+STIMULATION_READINGS = "stimulation_readings"
 TIME_INDICES = "time_indices"
 TIME_OFFSETS = "time_offsets"
